@@ -96,21 +96,25 @@ func handleGetProxies() ProxiesData {
 	runLock.Lock()
 	defer runLock.Unlock()
 
-	nameList := config.GetProxyNameList()
+	proxies := make(map[string]constant.Proxy)
 
-	proxies := tunnel.AllProxies()
+	for name, proxy := range tunnel.Proxies() {
+		proxies[name] = proxy
+	}
+	for _, p := range tunnel.Providers() {
+		for _, proxy := range p.Proxies() {
+			proxies[proxy.Name()] = proxy
+		}
+	}
 
 	hasGlobal := false
+	allNames := make([]string, 0)
 
-	allNames := make([]string, 0, len(nameList)+1)
-
-	for _, name := range nameList {
+	for name, p := range proxies {
 		if name == "GLOBAL" {
 			hasGlobal = true
 		}
-
-		p, ok := proxies[name]
-		if !ok || p == nil {
+		if p == nil {
 			continue
 		}
 		switch p.Type() {

@@ -7,6 +7,7 @@ plugins {
 android {
     namespace = "com.follow.clash.service"
     compileSdk = libs.versions.compileSdk.get().toInt()
+    buildToolsVersion = "36.1.0"
 
     defaultConfig {
         minSdk = libs.versions.minSdk.get().toInt()

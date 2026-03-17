@@ -553,5 +553,10 @@
   "geoSkipped": "{name} is already up to date",
   "geoUpdated": "{name} updated",
   "secondsCount": "{count} seconds",
-  "entriesCount": "{count} entries"
+  "entriesCount": "{count} entries",
+  "manualAddPackage": "Manual add package",
+  "manualAdded": "Manually added",
+  "invalidPackageName": "Invalid package name",
+  "packageAlreadyExists": "Package already exists",
+  "inputPackageName": "Input package name"
 }

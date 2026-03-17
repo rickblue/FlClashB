@@ -553,5 +553,10 @@
   "geoSkipped": "{name} 已是最新版本",
   "geoUpdated": "{name} 已更新",
   "secondsCount": "{count} 秒",
-  "entriesCount": "{count} 个条目"
+  "entriesCount": "{count} 个条目",
+  "manualAddPackage": "手动添加包名",
+  "manualAdded": "手动添加",
+  "invalidPackageName": "无效的包名",
+  "packageAlreadyExists": "包名已存在",
+  "inputPackageName": "输入包名"
 }

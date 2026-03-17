@@ -553,5 +553,10 @@
   "geoSkipped": "{name} はすでに最新です",
   "geoUpdated": "{name} 更新済み",
   "secondsCount": "{count} 秒",
-  "entriesCount": "{count} エントリ"
+  "entriesCount": "{count} エントリ",
+  "manualAddPackage": "パッケージ名を手動追加",
+  "manualAdded": "手動追加",
+  "invalidPackageName": "無効なパッケージ名",
+  "packageAlreadyExists": "パッケージは既に存在します",
+  "inputPackageName": "パッケージ名を入力"
 }

@@ -156,37 +156,13 @@ class _AccessViewState extends ConsumerState<AccessView> {
     }
   }
 
-  AccessControlProps _getRealAccessControlProps(
-    AccessControlProps accessControl,
-  ) {
-    final packages = ref.read(packagesProvider);
-    if (packages.isEmpty) {
-      return accessControl;
-    }
-    final viewPackageNames = packages
-        .getViewList(
-          pinedList: [],
-          sortType: accessControl.sort,
-          isFilterSystemApp: accessControl.isFilterSystemApp,
-          isFilterNonInternetApp: accessControl.isFilterNonInternetApp,
-        )
-        .map((item) => item.packageName)
-        .toSet();
-    return accessControl.copyWithNewList(
-      accessControl.currentList
-          .where((item) => viewPackageNames.contains(item))
-          .toList()
-        ..sort(),
-    );
-  }
-
   void _handleSave() {
     final accessControl = ref.read(accessControlStateProvider);
     ref
         .read(vpnSettingProvider.notifier)
         .update(
           (state) => state.copyWith(
-            accessControlProps: _getRealAccessControlProps(accessControl),
+            accessControlProps: accessControl,
           ),
         );
   }
@@ -196,13 +172,9 @@ class _AccessViewState extends ConsumerState<AccessView> {
       builder: (_, ref, child) {
         final accessControl = ref.watch(accessControlStateProvider);
         final noSave = ref.watch(
-          vpnSettingProvider.select((state) {
-            final current = _getRealAccessControlProps(
-              state.accessControlProps,
-            );
-            final origin = _getRealAccessControlProps(accessControl);
-            return current == origin;
-          }),
+          vpnSettingProvider.select(
+            (state) => state.accessControlProps == accessControl,
+          ),
         );
         if (noSave) {
           return const SizedBox();
@@ -242,6 +214,43 @@ class _AccessViewState extends ConsumerState<AccessView> {
       ref
           .read(accessControlStateProvider.notifier)
           .update((state) => state.copyWithNewList(list.toSet().toList()));
+    });
+  }
+
+  Future<void> _manualAddPackage() async {
+    final appLocalizations = context.appLocalizations;
+    final packageNameRegExp =
+        RegExp(r'^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z0-9_]+)+$');
+    final result = await globalState.showCommonDialog<String>(
+      child: InputDialog(
+        title: appLocalizations.manualAddPackage,
+        value: '',
+        hintText: 'com.android.vending',
+        labelText: appLocalizations.inputPackageName,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return appLocalizations.inputPackageName;
+          }
+          if (!packageNameRegExp.hasMatch(value)) {
+            return appLocalizations.invalidPackageName;
+          }
+          return null;
+        },
+      ),
+    );
+    if (result == null || result.isEmpty) return;
+    final currentList = ref.read(
+      accessControlStateProvider.select((state) => state.currentList),
+    );
+    if (currentList.contains(result)) {
+      globalState.showMessage(
+        message: TextSpan(text: appLocalizations.packageAlreadyExists),
+      );
+      return;
+    }
+    ref.read(accessControlStateProvider.notifier).update((state) {
+      final newList = List<String>.from(state.currentList)..add(result);
+      return state.copyWithNewList(newList);
     });
   }
 
@@ -296,6 +305,11 @@ class _AccessViewState extends ConsumerState<AccessView> {
                   label: appLocalizations.clipboardImport,
                   onPressed: _importFormClipboard,
                 ),
+                PopupMenuItemData(
+                  icon: Icons.add_circle_outline,
+                  label: appLocalizations.manualAddPackage,
+                  onPressed: _manualAddPackage,
+                ),
               ],
             ),
           ],
@@ -307,6 +321,7 @@ class _AccessViewState extends ConsumerState<AccessView> {
   Widget _buildContent({
     required List<Package> packages,
     required List<String> valueList,
+    required List<String> manualPackages,
   }) {
     return FutureBuilder(
       future: _completer.future,
@@ -315,27 +330,85 @@ class _AccessViewState extends ConsumerState<AccessView> {
         if (snapshot.connectionState != ConnectionState.done) {
           return const Center(child: CommonCircleLoading());
         }
-        return packages.isEmpty
-            ? NullStatus(label: appLocalizations.noData)
-            : CommonScrollBar(
-                controller: _controller,
-                child: ListView.builder(
-                  controller: _controller,
-                  itemCount: packages.length,
-                  itemExtent: 72,
-                  itemBuilder: (_, index) {
-                    final package = packages[index];
-                    return PackageListItem(
-                      key: Key(package.packageName),
-                      package: package,
-                      value: valueList.contains(package.packageName),
-                      onChanged: (value) {
-                        _handleSelected(package.packageName);
+        if (packages.isEmpty && manualPackages.isEmpty) {
+          return NullStatus(label: appLocalizations.noData);
+        }
+        final manualHeaderCount = manualPackages.isNotEmpty ? 1 : 0;
+        final totalCount =
+            manualHeaderCount + manualPackages.length + packages.length;
+        return CommonScrollBar(
+          controller: _controller,
+          child: ListView.builder(
+            controller: _controller,
+            itemCount: totalCount,
+            itemBuilder: (_, index) {
+              if (manualPackages.isNotEmpty && index == 0) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Text(
+                    appLocalizations.manualAdded,
+                    style: context.textTheme.titleSmall?.copyWith(
+                      color: context.colorScheme.primary,
+                    ),
+                  ),
+                );
+              }
+              final manualStart = manualHeaderCount;
+              final manualEnd = manualHeaderCount + manualPackages.length;
+              if (index >= manualStart && index < manualEnd) {
+                final packageName = manualPackages[index - manualStart];
+                return SizedBox(
+                  height: 72,
+                  child: ListItem.checkbox(
+                    leading: SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: Icon(
+                        Icons.android,
+                        size: 40,
+                        color: context.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    title: Text(
+                      packageName,
+                      style: const TextStyle(overflow: TextOverflow.ellipsis),
+                      maxLines: 1,
+                    ),
+                    subtitle: Text(
+                      appLocalizations.manualAdded,
+                      style: TextStyle(
+                        overflow: TextOverflow.ellipsis,
+                        color: context.colorScheme.outline,
+                      ),
+                      maxLines: 1,
+                    ),
+                    delegate: CheckboxDelegate(
+                      value: true,
+                      onChanged: (_) {
+                        _handleSelected(packageName);
                       },
-                    );
+                    ),
+                  ),
+                );
+              }
+              final package = packages[index - manualEnd];
+              return SizedBox(
+                height: 72,
+                child: PackageListItem(
+                  key: Key(package.packageName),
+                  package: package,
+                  value: valueList.contains(package.packageName),
+                  onChanged: (value) {
+                    _handleSelected(package.packageName);
                   },
                 ),
               );
+            },
+          ),
+        );
       },
     );
   }
@@ -409,6 +482,11 @@ class _AccessViewState extends ConsumerState<AccessView> {
     final currentList = accessControl.currentList;
     final viewPackageNameList = viewPackages.map((e) => e.packageName).toList();
     final valueList = currentList.intersection(viewPackageNameList);
+    final allPackageNames = packages.map((e) => e.packageName).toSet();
+    final manualPackages = currentList
+        .where((name) => !allPackageNames.contains(name))
+        .where((name) => query.isEmpty || name.toLowerCase().contains(query))
+        .toList();
     return CommonScaffold(
       key: _scaffoldKey,
       isLoading: isLoading,
@@ -420,12 +498,13 @@ class _AccessViewState extends ConsumerState<AccessView> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildBannerBar(mode, valueList.length),
+            _buildBannerBar(mode, valueList.length + manualPackages.length),
             const SizedBox(height: 8),
             Expanded(
               child: _buildContent(
                 packages: viewPackages,
                 valueList: valueList,
+                manualPackages: manualPackages,
               ),
             ),
           ],

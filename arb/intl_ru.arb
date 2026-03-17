@@ -553,5 +553,10 @@
   "geoSkipped": "Для {name} уже установлена последняя версия",
   "geoUpdated": "{name} обновлено",
   "secondsCount": "{count} секунд",
-  "entriesCount": "{count} записей"
+  "entriesCount": "{count} записей",
+  "manualAddPackage": "Добавить пакет вручную",
+  "manualAdded": "Добавлено вручную",
+  "invalidPackageName": "Недопустимое имя пакета",
+  "packageAlreadyExists": "Пакет уже существует",
+  "inputPackageName": "Введите имя пакета"
 }
