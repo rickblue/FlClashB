@@ -334,8 +334,9 @@ class _AccessViewState extends ConsumerState<AccessView> {
           return NullStatus(label: appLocalizations.noData);
         }
         final manualHeaderCount = manualPackages.isNotEmpty ? 1 : 0;
-        final totalCount =
-            manualHeaderCount + manualPackages.length + packages.length;
+        final totalCount = manualHeaderCount +
+            manualPackages.length +
+            packages.length;
         return CommonScrollBar(
           controller: _controller,
           child: ListView.builder(
@@ -394,7 +395,8 @@ class _AccessViewState extends ConsumerState<AccessView> {
                   ),
                 );
               }
-              final package = packages[index - manualEnd];
+              final pkgIndex = index - manualEnd;
+              final package = packages[pkgIndex];
               return SizedBox(
                 height: 72,
                 child: PackageListItem(
