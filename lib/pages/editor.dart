@@ -52,6 +52,7 @@ class _EditorPageState extends ConsumerState<EditorPage> {
   late CodeFindController _findController;
   late TextEditingController _titleController;
   late FocusNode _focusNode;
+  late CodeScrollController _scrollController;
   late bool readOnly = false;
   late final SelectionToolbarController _toolbarController;
 
@@ -64,13 +65,23 @@ class _EditorPageState extends ConsumerState<EditorPage> {
     _controller = CodeLineEditingController.fromText(widget.content);
     _findController = CodeFindController(_controller);
     _titleController = TextEditingController(text: widget.title);
-    if (system.isDesktop) {
-      return;
-    }
+    _scrollController = CodeScrollController();
     _focusNode.onKeyEvent = ((_, event) {
       final keys = HardwareKeyboard.instance.logicalKeysPressed;
       final key = event.logicalKey;
       if (!keys.contains(key)) {
+        return KeyEventResult.ignored;
+      }
+      if (system.isWindows) {
+        if (key == LogicalKeyboardKey.pageUp) {
+          _moveCursorByPage(false);
+          return KeyEventResult.handled;
+        } else if (key == LogicalKeyboardKey.pageDown) {
+          _moveCursorByPage(true);
+          return KeyEventResult.handled;
+        }
+      }
+      if (system.isDesktop) {
         return KeyEventResult.ignored;
       }
       if (key == LogicalKeyboardKey.arrowUp) {
@@ -108,6 +119,7 @@ class _EditorPageState extends ConsumerState<EditorPage> {
     _toolbarController.hide(context);
     _findController.dispose();
     _controller.dispose();
+    _scrollController.dispose();
     _focusNode.dispose();
     super.dispose();
   }
@@ -167,6 +179,41 @@ class _EditorPageState extends ConsumerState<EditorPage> {
     }
     final res = await request.getTextResponseForUrl(url);
     _controller.text = res.data ?? '';
+  }
+
+  bool get _isYamlEditor => widget.languages.contains(Language.yaml);
+
+  void _moveCursorByPage(bool forward) {
+    if (!_scrollController.verticalScroller.hasClients) {
+      return;
+    }
+    final position = _scrollController.verticalScroller.position;
+    final fontSize = context.textTheme.bodyLarge?.fontSize?.ap ?? 13;
+    final lineHeight = (fontSize * 1.5).clamp(18, 48).toDouble();
+    final pageExtent = (position.viewportDimension - lineHeight)
+        .clamp(lineHeight, double.infinity)
+        .toDouble();
+    final lineDelta = (pageExtent / lineHeight).floor().clamp(1, 9999).toInt();
+    final selection = _controller.selection;
+    final currentIndex = selection.extentIndex;
+    final targetIndex =
+        (forward ? currentIndex + lineDelta : currentIndex - lineDelta)
+            .clamp(0, _controller.lineCount - 1)
+            .toInt();
+    final targetLine = _controller.codeLines[targetIndex];
+    final targetOffset = selection.extentOffset
+        .clamp(0, targetLine.length)
+        .toInt();
+    final targetPixels =
+        (forward ? position.pixels + pageExtent : position.pixels - pageExtent)
+            .clamp(position.minScrollExtent, position.maxScrollExtent)
+            .toDouble();
+
+    _controller.selection = CodeLineSelection.collapsed(
+      index: targetIndex,
+      offset: targetOffset,
+    );
+    position.jumpTo(targetPixels);
   }
 
   @override
@@ -271,64 +318,58 @@ class _EditorPageState extends ConsumerState<EditorPage> {
             ),
           ]),
         ),
-        body: Stack(
-          children: [
-            CodeEditor(
-              readOnly: readOnly,
-              autofocus: false,
-              showCursorWhenReadOnly: false,
-              findController: _findController,
-              findBuilder: (context, controller, readOnly) => FindPanel(
-                controller: controller,
-                readOnly: readOnly,
-                isMobileView: isMobileView,
-              ),
-              padding: const EdgeInsets.only(right: 16),
-              autocompleteSymbols: true,
-              focusNode: _focusNode,
-              scrollbarBuilder: (context, child, details) {
-                return CommonScrollBar(
-                  controller: details.controller,
-                  child: child,
+        body: CodeEditor(
+          readOnly: readOnly,
+          autofocus: false,
+          scrollController: _scrollController,
+          findController: _findController,
+          findBuilder: (context, controller, readOnly) => FindPanel(
+            controller: controller,
+            readOnly: readOnly,
+            isMobileView: isMobileView,
+          ),
+          padding: EdgeInsets.only(right: 16),
+          autocompleteSymbols: true,
+          focusNode: _focusNode,
+          scrollbarBuilder: (context, child, details) {
+            return CommonScrollBar(
+              controller: details.controller,
+              child: child,
+            );
+          },
+          toolbarController: _toolbarController,
+          indicatorBuilder:
+              (context, editingController, chunkController, notifier) {
+                return Row(
+                  children: [
+                    DefaultCodeLineNumber(
+                      controller: editingController,
+                      notifier: notifier,
+                    ),
+                    DefaultCodeChunkIndicator(
+                      width: 20,
+                      controller: chunkController,
+                      notifier: notifier,
+                    ),
+                  ],
                 );
               },
-              toolbarController: _toolbarController,
-              indicatorBuilder:
-                  (context, editingController, chunkController, notifier) {
-                    return Row(
-                      children: [
-                        DefaultCodeLineNumber(
-                          controller: editingController,
-                          notifier: notifier,
-                        ),
-                        DefaultCodeChunkIndicator(
-                          width: 20,
-                          controller: chunkController,
-                          notifier: notifier,
-                        ),
-                      ],
-                    );
-                  },
-              shortcutsActivatorsBuilder:
-                  const DefaultCodeShortcutsActivatorsBuilder(),
-              controller: _controller,
-              style: CodeEditorStyle(
-                fontSize: context.textTheme.bodyLarge?.fontSize?.ap,
-                fontFamily: FontFamily.jetBrainsMono.value,
-                codeTheme: CodeHighlightTheme(
-                  languages: {
-                    if (widget.languages.contains(Language.yaml))
-                      'yaml': CodeHighlightThemeMode(mode: langYaml),
-                    if (widget.languages.contains(Language.javaScript))
-                      'javascript': CodeHighlightThemeMode(
-                        mode: langJavascript,
-                      ),
-                    if (widget.languages.contains(Language.json))
-                      'json': CodeHighlightThemeMode(mode: langJson),
-                  },
-                  theme: atomOneLightTheme,
-                ),
-              ),
+          shortcutsActivatorsBuilder: DefaultCodeShortcutsActivatorsBuilder(),
+          chunkAnalyzer: _isYamlEditor ? const YamlCodeChunkAnalyzer() : null,
+          controller: _controller,
+          style: CodeEditorStyle(
+            fontSize: context.textTheme.bodyLarge?.fontSize?.ap,
+            fontFamily: FontFamily.jetBrainsMono.value,
+            codeTheme: CodeHighlightTheme(
+              languages: {
+                if (widget.languages.contains(Language.yaml))
+                  'yaml': CodeHighlightThemeMode(mode: langYaml),
+                if (widget.languages.contains(Language.javaScript))
+                  'javascript': CodeHighlightThemeMode(mode: langJavascript),
+                if (widget.languages.contains(Language.json))
+                  'json': CodeHighlightThemeMode(mode: langJson),
+              },
+              theme: atomOneLightTheme,
             ),
             FadeBox(
               child: widget.content == null
@@ -346,6 +387,90 @@ class _EditorPageState extends ConsumerState<EditorPage> {
         ),
       ),
     );
+  }
+}
+
+class YamlCodeChunkAnalyzer implements CodeChunkAnalyzer {
+  const YamlCodeChunkAnalyzer();
+
+  @override
+  List<CodeChunk> run(CodeLines codeLines) {
+    final chunks = <CodeChunk>[];
+    final stack = <_YamlChunkState>[];
+    _YamlLineState? previous;
+
+    for (var index = 0; index < codeLines.length; index++) {
+      final current = _parseLine(index, codeLines[index].text);
+      if (current == null) {
+        continue;
+      }
+
+      while (stack.isNotEmpty && current.indent <= stack.last.indent) {
+        final chunk = stack.removeLast().toChunk(current.index);
+        if (chunk != null) {
+          chunks.add(chunk);
+        }
+      }
+
+      if (previous != null && current.indent > previous.indent) {
+        stack.add(_YamlChunkState(previous.index, previous.indent));
+      }
+
+      previous = current;
+    }
+
+    while (stack.isNotEmpty) {
+      final chunk = stack.removeLast().toChunk(codeLines.length);
+      if (chunk != null) {
+        chunks.add(chunk);
+      }
+    }
+
+    chunks.sort((a, b) => a.index.compareTo(b.index));
+    return chunks;
+  }
+
+  _YamlLineState? _parseLine(int index, String text) {
+    final trimmed = text.trimLeft();
+    if (trimmed.isEmpty || trimmed.startsWith('#')) {
+      return null;
+    }
+    return _YamlLineState(index: index, indent: _indentOf(text));
+  }
+
+  int _indentOf(String text) {
+    var indent = 0;
+    for (final rune in text.runes) {
+      if (rune == 0x20) {
+        indent++;
+      } else if (rune == 0x09) {
+        indent += 2;
+      } else {
+        break;
+      }
+    }
+    return indent;
+  }
+}
+
+class _YamlLineState {
+  final int index;
+  final int indent;
+
+  const _YamlLineState({required this.index, required this.indent});
+}
+
+class _YamlChunkState {
+  final int index;
+  final int indent;
+
+  const _YamlChunkState(this.index, this.indent);
+
+  CodeChunk? toChunk(int end) {
+    if (end - index <= 1) {
+      return null;
+    }
+    return CodeChunk(index, end);
   }
 }
 
