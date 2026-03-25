@@ -36,3 +36,4 @@ git push myfork flClashBLocal --force-with-lease
 - 系统 Java 25 会导致 Gradle 直接调用失败，但 flutter build 使用 Android Studio 自带的 JDK 21，不受影响
 - 构建前必须清理 android/core/.cxx/ 否则 CMake 可能使用缓存的 stub 分支
 - libcore.so 正常大小 8-13KB（JNI bridge），libclash.so 正常大小 ~36MB
+- 不用编译linux版本
