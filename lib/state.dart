@@ -93,7 +93,7 @@ class GlobalState {
     final appState = AppState(
       brightness: WidgetsBinding.instance.platformDispatcher.platformBrightness,
       version: version,
-      viewSize: Size.zero,
+      viewSize: system.isDesktop ? config.windowProps.size : Size.zero,
       requests: FixedList(maxLength),
       logs: FixedList(maxLength),
       traffics: FixedList(30),
@@ -111,7 +111,15 @@ class GlobalState {
       utils.getLocaleForString(config.appSettingProps.locale) ??
           WidgetsBinding.instance.platformDispatcher.locale,
     );
-    await window?.init(version, config.windowProps);
+    await window?.init(
+      version,
+      config.windowProps,
+      silentLaunch: config.appSettingProps.silentLaunch,
+    );
+    final initViewSize = await window?.size;
+    if (initViewSize != null) {
+      container.read(viewSizeProvider.notifier).value = initViewSize;
+    }
     if (system.isAndroid) {
       await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     }

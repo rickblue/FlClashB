@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/models/config.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:screen_retriever/screen_retriever.dart';
 import 'package:window_manager/window_manager.dart';
@@ -16,7 +17,11 @@ class Window {
     return _instance!;
   }
 
-  Future<void> init(int version, WindowProps props) async {
+  Future<void> init(
+    int version,
+    WindowProps props, {
+    bool silentLaunch = false,
+  }) async {
     final acquire = await singleInstanceLock.acquire();
     if (!acquire) {
       exit(0);
@@ -38,7 +43,13 @@ class Window {
     await windowManager.setMaximizable(true);
     await _windowPosition(props);
     await windowManager.waitUntilReadyToShow(windowOptions, () async {
+      commonPrint.log('window readyToShow silentLaunch:$silentLaunch');
       await windowManager.setPreventClose(true);
+      if (!silentLaunch) {
+        await windowManager.show();
+        await windowManager.focus();
+        await windowManager.setSkipTaskbar(false);
+      }
     });
   }
 
@@ -71,6 +82,7 @@ class Window {
 
   Future<void> show() async {
     render?.resume();
+    commonPrint.log('window show');
     await windowManager.show();
     await windowManager.focus();
     await windowManager.setSkipTaskbar(false);
@@ -92,8 +104,18 @@ class Window {
 
   Future<void> hide() async {
     render?.pause();
+    commonPrint.log('window hide');
     await windowManager.hide();
     await windowManager.setSkipTaskbar(true);
+  }
+
+  Future<Size?> get size async {
+    if (!kIsWeb && system.isDesktop) {
+      final value = await windowManager.getSize();
+      commonPrint.log('window size: $value');
+      return value;
+    }
+    return null;
   }
 }
 

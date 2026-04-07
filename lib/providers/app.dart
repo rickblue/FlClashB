@@ -159,7 +159,11 @@ double viewWidth(Ref ref) {
 
 @Riverpod(keepAlive: true)
 ViewMode viewMode(Ref ref) {
-  return utils.getViewMode(ref.watch(viewWidthProvider));
+  final width = ref.watch(viewWidthProvider);
+  if (width <= 0 && system.isDesktop) {
+    return ViewMode.desktop;
+  }
+  return utils.getViewMode(width);
 }
 
 @Riverpod(keepAlive: true)
