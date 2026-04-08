@@ -8,6 +8,7 @@ import 'package:fl_clash/widgets/dialog.dart';
 import 'package:fl_clash/widgets/list.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:system_fonts/system_fonts.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_color_utilities/palettes/core_palette.dart';
@@ -116,6 +117,12 @@ class GlobalState {
       config.windowProps,
       silentLaunch: config.appSettingProps.silentLaunch,
     );
+    final fontFamily = config.themeProps.fontFamily;
+    if (fontFamily != null && fontFamily != 'JetBrainsMono' && system.isDesktop) {
+      try {
+        await SystemFonts().loadFont(fontFamily);
+      } catch (_) {}
+    }
     final initViewSize = await window?.size;
     if (initViewSize != null) {
       container.read(viewSizeProvider.notifier).value = initViewSize;

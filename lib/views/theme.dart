@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:material_color_utilities/hct/hct.dart';
+import 'package:system_fonts/system_fonts.dart';
 
 class ThemeModeItem {
   final ThemeMode themeMode;
@@ -26,7 +27,7 @@ class ThemeModeItem {
 }
 
 class FontFamilyItem {
-  final FontFamily fontFamily;
+  final String? fontFamily;
   final String label;
 
   const FontFamilyItem({required this.fontFamily, required this.label});
@@ -43,6 +44,8 @@ class ThemeView extends StatelessWidget {
       body: const CustomScrollView(
         slivers: [
           _ThemeModeItem(),
+          SliverToBoxAdapter(child: SizedBox(height: 16)),
+          _FontFamilyItem(),
           SliverToBoxAdapter(child: SizedBox(height: 16)),
           _PrimaryColorItem(),
           SliverToBoxAdapter(child: SizedBox(height: 16)),
@@ -149,6 +152,188 @@ class _ThemeModeItem extends ConsumerWidget {
             },
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _FontFamilyItem extends ConsumerWidget {
+  const _FontFamilyItem();
+
+  Future<void> _openFontPicker(BuildContext context, WidgetRef ref) async {
+    final currentFont = ref.read(
+      themeSettingProvider.select((s) => s.fontFamily),
+    );
+    final selected = await globalState.showCommonDialog<String>(
+      child: _FontPickerDialog(currentFontFamily: currentFont),
+    );
+    if (selected != null) {
+      if (selected != 'JetBrainsMono') {
+        try {
+          await SystemFonts().loadFont(selected);
+        } catch (_) {}
+      }
+      ref.read(themeSettingProvider.notifier).update(
+        (state) => state.copyWith(fontFamily: selected),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentFontFamily = ref.watch(
+      themeSettingProvider.select((state) => state.fontFamily),
+    );
+    final isCustomFont = currentFontFamily != null &&
+        currentFontFamily != 'JetBrainsMono';
+    final itemCount = system.isDesktop ? 3 : 2;
+
+    return SliverToBoxAdapter(
+      child: ItemCard(
+        info: Info(label: appLocalizations.fontFamily, iconData: Icons.font_download),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          height: 56,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: itemCount,
+            separatorBuilder: (_, __) => const SizedBox(width: 16),
+            itemBuilder: (_, index) {
+              switch (index) {
+                case 0:
+                  return CommonCard(
+                    isSelected: currentFontFamily == null,
+                    onPressed: () {
+                      ref.read(themeSettingProvider.notifier).update(
+                        (state) => state.copyWith(fontFamily: null),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Center(
+                        child: Text(appLocalizations.systemFont),
+                      ),
+                    ),
+                  );
+                case 1:
+                  return CommonCard(
+                    isSelected: currentFontFamily == 'JetBrainsMono',
+                    onPressed: () {
+                      ref.read(themeSettingProvider.notifier).update(
+                        (state) => state.copyWith(fontFamily: 'JetBrainsMono'),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Center(
+                        child: Text(
+                          'JetBrains Mono',
+                          style: context.textTheme.bodyMedium?.copyWith(
+                            fontFamily: 'JetBrainsMono',
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                case 2:
+                  return CommonCard(
+                    isSelected: isCustomFont,
+                    onPressed: () => _openFontPicker(context, ref),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Center(
+                        child: Text(
+                          isCustomFont ? currentFontFamily! : appLocalizations.more,
+                        ),
+                      ),
+                    ),
+                  );
+                default:
+                  return const SizedBox.shrink();
+              }
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FontPickerDialog extends StatefulWidget {
+  final String? currentFontFamily;
+  const _FontPickerDialog({this.currentFontFamily});
+
+  @override
+  State<_FontPickerDialog> createState() => _FontPickerDialogState();
+}
+
+class _FontPickerDialogState extends State<_FontPickerDialog> {
+  String _query = '';
+  List<String>? _fonts;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFonts();
+  }
+
+  Future<void> _loadFonts() async {
+    try {
+      final fonts = await SystemFonts().getFontList();
+      fonts.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      if (mounted) setState(() { _fonts = fonts; _loading = false; });
+    } catch (_) {
+      if (mounted) setState(() { _fonts = []; _loading = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filtered = _fonts == null
+        ? <String>[]
+        : (_query.isEmpty
+            ? _fonts!
+            : _fonts!.where((f) => f.toLowerCase().contains(_query)).toList());
+
+    return CommonDialog(
+      title: appLocalizations.fontFamily,
+      overrideScroll: true,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: appLocalizations.search,
+                prefixIcon: const Icon(Icons.search),
+                isDense: true,
+              ),
+              onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
+            ),
+          ),
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    itemCount: filtered.length,
+                    itemBuilder: (_, index) {
+                      final font = filtered[index];
+                      final isSelected = font == widget.currentFontFamily;
+                      return ListTile(
+                        selected: isSelected,
+                        title: Text(
+                          font,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: isSelected ? const Icon(Icons.check) : null,
+                        onTap: () => Navigator.of(context).pop(font),
+                      );
+                    },
+                  ),
+          ),
+        ],
       ),
     );
   }

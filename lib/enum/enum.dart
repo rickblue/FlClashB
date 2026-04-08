@@ -217,6 +217,7 @@ enum FontFamily {
   const FontFamily(this.value);
 }
 
+
 enum RouteMode { bypassPrivate, config }
 
 enum AuthorizeCode { none, success, error }

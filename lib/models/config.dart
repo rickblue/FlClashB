@@ -203,12 +203,19 @@ abstract class TextScale with _$TextScale {
       _$TextScaleFromJson(json);
 }
 
+String? _fontFamilyFromJson(dynamic value) {
+  if (value == null || value == 'system') return null;
+  if (value == 'jetBrainsMono') return 'JetBrainsMono';
+  return value as String;
+}
+
 @freezed
 abstract class ThemeProps with _$ThemeProps {
   const factory ThemeProps({
     int? primaryColor,
     @Default(defaultPrimaryColors) List<int> primaryColors,
     @Default(ThemeMode.dark) ThemeMode themeMode,
+    @JsonKey(fromJson: _fontFamilyFromJson) @Default(null) String? fontFamily,
     @Default(DynamicSchemeVariant.content) DynamicSchemeVariant schemeVariant,
     @Default(false) bool pureBlack,
     @Default(TextScale()) TextScale textScale,

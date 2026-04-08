@@ -266,6 +266,9 @@ _ThemeProps _$ThemePropsFromJson(Map<String, dynamic> json) => _ThemeProps(
   themeMode:
       $enumDecodeNullable(_$ThemeModeEnumMap, json['themeMode']) ??
       ThemeMode.dark,
+  fontFamily: json['fontFamily'] == null
+      ? null
+      : _fontFamilyFromJson(json['fontFamily']),
   schemeVariant:
       $enumDecodeNullable(
         _$DynamicSchemeVariantEnumMap,
@@ -283,6 +286,7 @@ Map<String, dynamic> _$ThemePropsToJson(_ThemeProps instance) =>
       'primaryColor': instance.primaryColor,
       'primaryColors': instance.primaryColors,
       'themeMode': _$ThemeModeEnumMap[instance.themeMode]!,
+      'fontFamily': instance.fontFamily,
       'schemeVariant': _$DynamicSchemeVariantEnumMap[instance.schemeVariant]!,
       'pureBlack': instance.pureBlack,
       'textScale': instance.textScale,
