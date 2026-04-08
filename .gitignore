@@ -43,9 +43,16 @@ app.*.map.json
 
 # Claude Code - ignore user-specific settings only
 .claude/settings.local.json
+/.claude
+
+#AI generated
+CLAUDE.md
+AGENTS.md
+env.json
 
 # Documentation (generated/planning artifacts)
 docs/
+tool/
 
 
 # Android Studio will place build artifacts here
