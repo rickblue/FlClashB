@@ -2014,6 +2014,11 @@ class AppLocalizations {
     return Intl.message('FontFamily', name: 'fontFamily', desc: '', args: []);
   }
 
+  /// `System Font`
+  String get systemFont {
+    return Intl.message('System Font', name: 'systemFont', desc: '', args: []);
+  }
+
   /// `Toggle`
   String get toggle {
     return Intl.message('Toggle', name: 'toggle', desc: '', args: []);

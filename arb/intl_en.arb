@@ -264,6 +264,7 @@
   "icon": "Icon",
   "noData": "No data",
   "fontFamily": "FontFamily",
+  "systemFont": "System Font",
   "toggle": "Toggle",
   "system": "System",
   "routeMode": "Route mode",

@@ -264,6 +264,7 @@
   "icon": "アイコン",
   "noData": "データなし",
   "fontFamily": "フォントファミリー",
+  "systemFont": "システムフォント",
   "toggle": "トグル",
   "system": "システム",
   "routeMode": "ルートモード",

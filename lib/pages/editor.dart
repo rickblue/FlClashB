@@ -371,19 +371,7 @@ class _EditorPageState extends ConsumerState<EditorPage> {
               },
               theme: atomOneLightTheme,
             ),
-            FadeBox(
-              child: widget.content == null
-                  ? Container(
-                      color: context.colorScheme.surface,
-                      alignment: Alignment.center,
-                      child: const SizedBox.square(
-                        dimension: 200,
-                        child: CommonCircleLoading(),
-                      ),
-                    )
-                  : const SizedBox.shrink(),
-            ),
-          ],
+          ),
         ),
       ),
     );

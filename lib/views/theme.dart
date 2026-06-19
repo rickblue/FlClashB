@@ -190,7 +190,7 @@ class _FontFamilyItem extends ConsumerWidget {
 
     return SliverToBoxAdapter(
       child: ItemCard(
-        info: Info(label: appLocalizations.fontFamily, iconData: Icons.font_download),
+        info: Info(label: context.appLocalizations.fontFamily, iconData: Icons.font_download),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           height: 56,
@@ -211,7 +211,7 @@ class _FontFamilyItem extends ConsumerWidget {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Center(
-                        child: Text(appLocalizations.systemFont),
+                        child: Text(context.appLocalizations.systemFont),
                       ),
                     ),
                   );
@@ -243,7 +243,7 @@ class _FontFamilyItem extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Center(
                         child: Text(
-                          isCustomFont ? currentFontFamily! : appLocalizations.more,
+                          isCustomFont ? currentFontFamily! : context.appLocalizations.more,
                         ),
                       ),
                     ),
@@ -297,7 +297,7 @@ class _FontPickerDialogState extends State<_FontPickerDialog> {
             : _fonts!.where((f) => f.toLowerCase().contains(_query)).toList());
 
     return CommonDialog(
-      title: appLocalizations.fontFamily,
+      title: context.appLocalizations.fontFamily,
       overrideScroll: true,
       child: Column(
         children: [
@@ -305,7 +305,7 @@ class _FontPickerDialogState extends State<_FontPickerDialog> {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             child: TextField(
               decoration: InputDecoration(
-                hintText: appLocalizations.search,
+                hintText: context.appLocalizations.search,
                 prefixIcon: const Icon(Icons.search),
                 isDense: true,
               ),

@@ -264,6 +264,7 @@
   "icon": "图片",
   "noData": "暂无数据",
   "fontFamily": "字体",
+  "systemFont": "系统字体",
   "toggle": "切换",
   "system": "系统",
   "routeMode": "路由模式",
