@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"cmp"
 	"context"
 	"github.com/metacubex/mihomo/adapter"
@@ -142,7 +143,7 @@ func handleChangeProxy(params *ChangeProxyParams, fn func(string string)) {
 		defer runLock.Unlock()
 		groupName := params.GroupName
 		proxyName := params.ProxyName
-		proxies := tunnel.AllProxies()
+		proxies := tunnel.Proxies()
 		group, ok := proxies[groupName]
 		if !ok {
 			fn("Not found group")
@@ -215,7 +216,7 @@ func handleAsyncTestDelay(params *TestDelayParams, fn func(*Delay)) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(params.Timeout))
 		defer cancel()
 
-		proxies := tunnel.AllProxies()
+		proxies := tunnel.Proxies()
 		proxy := proxies[params.ProxyName]
 
 		if proxy == nil {
@@ -438,6 +439,13 @@ func handleCrash() {
 }
 
 func handleUpdateConfig(params *UpdateParams) string {
+	f, _ := os.OpenFile("/tmp/flclash_tun_debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if f != nil {
+		tunStr := "nil"
+		if params.Tun != nil { tunStr = fmt.Sprintf("enable=%v", params.Tun.Enable) }
+		fmt.Fprintf(f, "[TUN-DEBUG] handleUpdateConfig called, tun=%s\n", tunStr)
+		f.Close()
+	}
 	updateConfig(params)
 	return ""
 }

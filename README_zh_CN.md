@@ -128,6 +128,19 @@ brew install --cask flclash
            dart setup.dart macos
            ```
 
+        3. **TUN 模式需要 setuid 权限。** macOS 系统完整性保护 (SIP) 禁止对用户目录下的文件执行 `chown`，需要把二进制文件先放到 `/tmp` 设置权限，再用硬链接接回 app bundle：
+
+           ```bash
+           BINARY="build/macos/Build/Products/Release/FlClash.app/Contents/MacOS/FlClashCore"
+           cp "$BINARY" /tmp/FlClashCore
+           sudo chown root:admin /tmp/FlClashCore && sudo chmod u+s,g+s /tmp/FlClashCore
+           rm "$BINARY"
+           ln /tmp/FlClashCore "$BINARY"
+           codesign --force --sign - "build/macos/Build/Products/Release/FlClash.app"
+           ```
+
+           首次切换 TUN 时 app 也会通过管理员密码弹窗自动执行此操作。
+
 ## Star
 
 支持开发者的最简单方式是点击页面顶部的星标（⭐）。

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tray Icon Candidates — macOS Menu Bar Preview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #2c2c2c;
+    color: #ccc;
+    padding: 24px;
+  }
+  h1 { font-size: 18px; font-weight: 500; margin-bottom: 4px; color: #eee; }
+  .sub { font-size: 12px; color: #888; margin-bottom: 20px; }
+
+  .toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+  .toolbar span { font-size: 12px; color: #999; }
+  .toolbar button {
+    padding: 5px 12px; border: 1px solid #555; border-radius: 6px;
+    background: #3a3a3a; color: #ccc; cursor: pointer; font-size: 12px;
+  }
+  .toolbar button.active { background: #5a7df0; border-color: #5a7df0; color: #fff; }
+  .toolbar label { font-size: 12px; color: #aaa; cursor: pointer; user-select: none; display: flex; align-items: center; gap: 4px; margin-left: auto; }
+  .toolbar input[type=checkbox] { accent-color: #5a7df0; }
+
+  h2.section { font-size: 13px; font-weight: 500; color: #999; margin: 20px 0 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  table {
+    width: 100%; border-collapse: separate; border-spacing: 0;
+    border-radius: 10px; overflow: hidden;
+  }
+  thead th {
+    position: sticky; top: 0; background: #3a3a3a; color: #bbb;
+    font-size: 11px; font-weight: 500; text-transform: uppercase;
+    letter-spacing: 0.5px; padding: 10px 12px; z-index: 1;
+  }
+  thead th:first-child { text-align: left; padding-left: 16px; }
+  tbody td {
+    padding: 0; vertical-align: middle;
+  }
+  tbody td.icon-cell {
+    text-align: center; width: 50%;
+  }
+  tbody td.name {
+    font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+    font-size: 12px; color: #ccc; font-weight: 500;
+    padding: 0 16px; white-space: nowrap;
+  }
+  tbody tr { height: 56px; }
+  tbody tr:nth-child(odd) { background: #333; }
+  tbody tr:nth-child(even) { background: #2e2e2e; }
+
+  .bg-cell {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; height: 56px;
+  }
+  .bg-cell.dark  { background: #1e1e1e; }
+  .bg-cell.light { background: #f0f0f0; }
+  .bg-cell img {
+    display: block; object-fit: contain;
+  }
+
+  .icon-mask {
+    display: inline-block;
+    mask-size: contain;
+    -webkit-mask-size: contain;
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-position: center;
+  }
+
+  /* Highlight the flclash row */
+  tr.flclash-row { background: #3d3a5c !important; }
+  tr.flclash-row td.name { color: #c4b5fd; font-weight: 700; }
+
+  .hint {
+    margin-top: 20px; font-size: 11px; color: #666;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<h1>Tray Icon Candidates</h1>
+<p class="sub">FlClash app icon (shrunk to tray size, full color) + 11 template candidates with assigned accent hues.</p>
+
+<div class="toolbar">
+  <span>Size:</span>
+  <button data-size="24" class="active">24px</button>
+  <button data-size="28">28px</button>
+  <button data-size="32">32px</button>
+  <button data-size="36">36px</button>
+  <label>
+    <input type="checkbox" id="grayscaleToggle">
+    Show templates as B&amp;W
+  </label>
+</div>
+
+<h2 class="section">App Icon (full color)</h2>
+<table>
+  <thead><tr><th>Icon</th><th>Dark bg</th><th>Light bg</th></tr></thead>
+  <tbody id="flclash-tbody"></tbody>
+</table>
+
+<h2 class="section">Template Candidates (mask-colored)</h2>
+<table>
+  <thead><tr><th>Icon</th><th>Dark bg</th><th>Light bg</th></tr></thead>
+  <tbody id="tbody"></tbody>
+</table>
+
+<p class="hint">
+  macOS menu bar height is 24px. Typically 16–18px icon content inside a 24px frame looks best.
+  The FlClash app icon is the actual full-color artwork. The templates below use CSS mask-image to
+  fill the icon silhouette with an accent color — toggle B&amp;W to see raw black shapes.
+</p>
+
+<script>
+const templateIcons = [
+  { file: 'tray_arrows.png',     color: '#60a5fa' },  // blue
+  { file: 'tray_bolt.png',       color: '#facc15' },  // yellow
+  { file: 'tray_chain.png',      color: '#a78bfa' },  // violet
+  { file: 'tray_circledot.png',  color: '#f472b6' },  // pink
+  { file: 'tray_globe.png',      color: '#34d399' },  // emerald
+  { file: 'tray_hex.png',        color: '#fb923c' },  // orange
+  { file: 'tray_link.png',       color: '#38bdf8' },  // sky
+  { file: 'tray_paperplane.png', color: '#4ade80' },  // green
+  { file: 'tray_power.png',      color: '#f87171' },  // red
+  { file: 'tray_shield.png',     color: '#818cf8' },  // indigo
+  { file: 'tray_signal.png',     color: '#2dd4bf' },  // teal
+];
+
+let size = 24;
+let grayscale = false;
+
+function renderFlclash() {
+  const tbody = document.getElementById('flclash-tbody');
+  tbody.innerHTML = `
+    <tr class="flclash-row">
+      <td class="name">flclash</td>
+      <td class="icon-cell"><div class="bg-cell dark"><img src="tray_flclash.png" width="${size}" height="${size}"></div></td>
+      <td class="icon-cell"><div class="bg-cell light"><img src="tray_flclash.png" width="${size}" height="${size}"></div></td>
+    </tr>`;
+}
+
+function renderTemplates() {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  for (const {file, color} of templateIcons) {
+    const name = file.replace(/^tray_|\.png$/g, '');
+
+    const darkBg = grayscale
+      ? `<div class="bg-cell dark"><img src="${file}" width="${size}" height="${size}" style="filter:invert(1)"></div>`
+      : `<div class="bg-cell dark"><div class="icon-mask" style="width:${size}px;height:${size}px;mask-image:url(${file});-webkit-mask-image:url(${file});background:${color}"></div></div>`;
+
+    const lightBg = grayscale
+      ? `<div class="bg-cell light"><img src="${file}" width="${size}" height="${size}"></div>`
+      : `<div class="bg-cell light"><div class="icon-mask" style="width:${size}px;height:${size}px;mask-image:url(${file});-webkit-mask-image:url(${file});background:${color}"></div></div>`;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="name"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${color};margin-right:6px;vertical-align:middle"></span>${name}</td>
+      <td class="icon-cell">${darkBg}</td>
+      <td class="icon-cell">${lightBg}</td>`;
+    tbody.appendChild(tr);
+  }
+}
+
+function render() {
+  renderFlclash();
+  renderTemplates();
+}
+
+document.querySelectorAll('.toolbar button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.toolbar button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    size = parseInt(btn.dataset.size);
+    render();
+  });
+});
+
+document.getElementById('grayscaleToggle').addEventListener('change', (e) => {
+  grayscale = e.target.checked;
+  renderTemplates();
+});
+
+render();
+</script>
+</body>
+</html>

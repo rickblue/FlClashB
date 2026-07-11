@@ -100,7 +100,8 @@ class System {
 
     if (system.isMacOS) {
       final escapedPath = _shellEscape(appPath.corePath);
-      final shell = 'chown root:admin $escapedPath && chmod +sx $escapedPath';
+      final escapedTmpPath = _shellEscape('/tmp/FlClashCore');
+      final shell = 'cp $escapedPath $escapedTmpPath && chown root:admin $escapedTmpPath && chmod +sx $escapedTmpPath && ln -f $escapedTmpPath $escapedPath';
       final arguments = [
         '-e',
         'do shell script "$shell" with administrator privileges',

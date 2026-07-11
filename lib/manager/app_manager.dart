@@ -115,16 +115,7 @@ class AppEnvManager extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (kDebugMode) {
-      if (globalState.isPre) {
-        return Banner(
-          message: 'DEBUG',
-          location: BannerLocation.topEnd,
-          child: child,
-        );
-      }
-    }
-    if (globalState.isPre) {
+    if (kDebugMode && globalState.isPre) {
       return Banner(
         message: globalState.appEnv.toUpperCase(),
         location: BannerLocation.topEnd,
@@ -281,6 +272,13 @@ class AppSidebarContainer extends ConsumerWidget {
                       icon: Icon(
                         Icons.menu,
                         color: context.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '0.8.93-B',
+                      style: context.textTheme.labelSmall?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                       ),
                     ),
                     const SizedBox(height: 16),

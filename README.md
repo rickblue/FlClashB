@@ -128,6 +128,19 @@ brew install --cask flclash
            dart setup.dart macos
            ```
 
+        3. **TUN mode requires setuid.** macOS System Integrity Protection (SIP) blocks `chown` on files under home directories, so the binary must be prepared in `/tmp` and hardlinked back:
+
+           ```bash
+           BINARY="build/macos/Build/Products/Release/FlClash.app/Contents/MacOS/FlClashCore"
+           cp "$BINARY" /tmp/FlClashCore
+           sudo chown root:admin /tmp/FlClashCore && sudo chmod u+s,g+s /tmp/FlClashCore
+           rm "$BINARY"
+           ln /tmp/FlClashCore "$BINARY"
+           codesign --force --sign - "build/macos/Build/Products/Release/FlClash.app"
+           ```
+
+           The app can also do this automatically via the admin password dialog when toggling TUN for the first time.
+
 ## Star
 
 The easiest way to support developers is to click on the star (⭐) at the top of the page.

@@ -72,14 +72,12 @@ class _EditorPageState extends ConsumerState<EditorPage> {
       if (!keys.contains(key)) {
         return KeyEventResult.ignored;
       }
-      if (system.isWindows) {
-        if (key == LogicalKeyboardKey.pageUp) {
-          _moveCursorByPage(false);
-          return KeyEventResult.handled;
-        } else if (key == LogicalKeyboardKey.pageDown) {
-          _moveCursorByPage(true);
-          return KeyEventResult.handled;
-        }
+      if (key == LogicalKeyboardKey.pageUp) {
+        _moveCursorByPage(false);
+        return KeyEventResult.handled;
+      } else if (key == LogicalKeyboardKey.pageDown) {
+        _moveCursorByPage(true);
+        return KeyEventResult.handled;
       }
       if (system.isDesktop) {
         return KeyEventResult.ignored;
