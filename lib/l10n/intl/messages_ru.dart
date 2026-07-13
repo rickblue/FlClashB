@@ -502,6 +502,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "inputCorrectHotkey": MessageLookupByLibrary.simpleMessage(
       "Пожалуйста, введите правильную горячую клавишу",
     ),
+    "inputPackageName": MessageLookupByLibrary.simpleMessage(
+      "Введите имя пакета",
+    ),
     "inputProxyGroupName": MessageLookupByLibrary.simpleMessage(
       "Введите имя группы прокси",
     ),
@@ -516,6 +519,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "intranetIP": MessageLookupByLibrary.simpleMessage("Внутренний IP"),
     "invalidBackupFile": MessageLookupByLibrary.simpleMessage(
       "Неверный файл резервной копии",
+    ),
+    "invalidPackageName": MessageLookupByLibrary.simpleMessage(
+      "Недопустимое имя пакета",
     ),
     "invalidPolicy": m12,
     "invalidProxy": m13,
@@ -574,6 +580,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "Используется для разблокировки Loopback UWP",
     ),
     "loose": MessageLookupByLibrary.simpleMessage("Свободный"),
+    "manualAddPackage": MessageLookupByLibrary.simpleMessage(
+      "Добавить пакет вручную",
+    ),
+    "manualAdded": MessageLookupByLibrary.simpleMessage("Добавлено вручную"),
     "matchSourceIp": MessageLookupByLibrary.simpleMessage(
       "Сопоставить исходный IP",
     ),
@@ -680,6 +690,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "overwriteTypeCustomDesc": MessageLookupByLibrary.simpleMessage(
       "Пользовательский режим, полная настройка групп прокси и правил",
+    ),
+    "packageAlreadyExists": MessageLookupByLibrary.simpleMessage(
+      "Пакет уже существует",
     ),
     "palette": MessageLookupByLibrary.simpleMessage("Палитра"),
     "password": MessageLookupByLibrary.simpleMessage("Пароль"),

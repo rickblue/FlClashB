@@ -555,6 +555,7 @@
   "geoUpdated": "{name} updated",
   "secondsCount": "{count} seconds",
   "entriesCount": "{count} entries",
+  "systemFont": "System Font",
   "manualAddPackage": "Manual add package",
   "manualAdded": "Manually added",
   "invalidPackageName": "Invalid package name",

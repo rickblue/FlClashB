@@ -483,6 +483,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "inputCorrectHotkey": MessageLookupByLibrary.simpleMessage(
       "Please enter the correct hotkey",
     ),
+    "inputPackageName": MessageLookupByLibrary.simpleMessage(
+      "Input package name",
+    ),
     "inputProxyGroupName": MessageLookupByLibrary.simpleMessage(
       "Input proxy group name",
     ),
@@ -497,6 +500,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "intranetIP": MessageLookupByLibrary.simpleMessage("Intranet IP"),
     "invalidBackupFile": MessageLookupByLibrary.simpleMessage(
       "Invalid backup file",
+    ),
+    "invalidPackageName": MessageLookupByLibrary.simpleMessage(
+      "Invalid package name",
     ),
     "invalidPolicy": m12,
     "invalidProxy": m13,
@@ -553,6 +559,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "Used for UWP loopback unlocking",
     ),
     "loose": MessageLookupByLibrary.simpleMessage("Loose"),
+    "manualAddPackage": MessageLookupByLibrary.simpleMessage(
+      "Manual add package",
+    ),
+    "manualAdded": MessageLookupByLibrary.simpleMessage("Manually added"),
     "matchSourceIp": MessageLookupByLibrary.simpleMessage("Match source IP"),
     "maxFailedTimes": MessageLookupByLibrary.simpleMessage("Max failed times"),
     "memoryInfo": MessageLookupByLibrary.simpleMessage("Memory info"),
@@ -645,6 +655,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "overwriteTypeCustom": MessageLookupByLibrary.simpleMessage("Custom"),
     "overwriteTypeCustomDesc": MessageLookupByLibrary.simpleMessage(
       "Custom mode, fully customize proxy groups and rules",
+    ),
+    "packageAlreadyExists": MessageLookupByLibrary.simpleMessage(
+      "Package already exists",
     ),
     "palette": MessageLookupByLibrary.simpleMessage("Palette"),
     "password": MessageLookupByLibrary.simpleMessage("Password"),

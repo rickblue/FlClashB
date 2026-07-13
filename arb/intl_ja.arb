@@ -555,6 +555,7 @@
   "geoUpdated": "{name} 更新済み",
   "secondsCount": "{count} 秒",
   "entriesCount": "{count} エントリ",
+  "systemFont": "システムフォント",
   "manualAddPackage": "パッケージ名を手動追加",
   "manualAdded": "手動追加",
   "invalidPackageName": "無効なパッケージ名",

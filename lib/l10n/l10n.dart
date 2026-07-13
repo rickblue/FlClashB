@@ -4528,6 +4528,61 @@ class AppLocalizations {
       args: [count],
     );
   }
+
+  /// `System Font`
+  String get systemFont {
+    return Intl.message('System Font', name: 'systemFont', desc: '', args: []);
+  }
+
+  /// `Manual add package`
+  String get manualAddPackage {
+    return Intl.message(
+      'Manual add package',
+      name: 'manualAddPackage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Manually added`
+  String get manualAdded {
+    return Intl.message(
+      'Manually added',
+      name: 'manualAdded',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invalid package name`
+  String get invalidPackageName {
+    return Intl.message(
+      'Invalid package name',
+      name: 'invalidPackageName',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Package already exists`
+  String get packageAlreadyExists {
+    return Intl.message(
+      'Package already exists',
+      name: 'packageAlreadyExists',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Input package name`
+  String get inputPackageName {
+    return Intl.message(
+      'Input package name',
+      name: 'inputPackageName',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

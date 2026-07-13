@@ -555,6 +555,7 @@
   "geoUpdated": "{name} обновлено",
   "secondsCount": "{count} секунд",
   "entriesCount": "{count} записей",
+  "systemFont": "Системный шрифт",
   "manualAddPackage": "Добавить пакет вручную",
   "manualAdded": "Добавлено вручную",
   "invalidPackageName": "Недопустимое имя пакета",
