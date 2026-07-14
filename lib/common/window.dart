@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:fl_clash/common/common.dart';
@@ -9,6 +10,7 @@ import 'package:window_manager/window_manager.dart';
 
 class Window {
   static Window? _instance;
+  final Completer<void> _readyCompleter = Completer<void>();
 
   Window._internal();
 
@@ -32,6 +34,10 @@ class Window {
       protocol.register('flclash');
     }
     await windowManager.ensureInitialized();
+    await singleInstanceLock.startActivationServer(() async {
+      await _readyCompleter.future;
+      await show();
+    });
     // kDebugMode ? Size(680, 580) :
     final WindowOptions windowOptions = WindowOptions(
       size: props.size,
@@ -46,9 +52,10 @@ class Window {
       commonPrint.log('window readyToShow silentLaunch:$silentLaunch');
       await windowManager.setPreventClose(true);
       if (!silentLaunch) {
-        await windowManager.show();
-        await windowManager.focus();
-        await windowManager.setSkipTaskbar(false);
+        await show();
+      }
+      if (!_readyCompleter.isCompleted) {
+        _readyCompleter.complete();
       }
     });
   }
@@ -83,6 +90,9 @@ class Window {
   Future<void> show() async {
     render?.resume();
     commonPrint.log('window show');
+    if (await windowManager.isMinimized()) {
+      await windowManager.restore();
+    }
     await windowManager.show();
     await windowManager.focus();
     await windowManager.setSkipTaskbar(false);

@@ -11,7 +11,9 @@ void main() {
     test('returns idle icon when core is not started', () {
       expect(
         tray.getTryIcon(isStart: false, tunEnable: false),
-        Platform.isMacOS
+        Platform.isWindows
+            ? 'assets/images/icon.ico'
+            : Platform.isMacOS
             ? 'assets/images/icon/tray_flclash.$suffix'
             : 'assets/images/icon/status_1.$suffix',
       );
@@ -20,7 +22,9 @@ void main() {
     test('returns normal mode icon when core is started without TUN', () {
       expect(
         tray.getTryIcon(isStart: true, tunEnable: false),
-        Platform.isMacOS
+        Platform.isWindows
+            ? 'assets/images/icon.ico'
+            : Platform.isMacOS
             ? 'assets/images/icon/tray_flclash.$suffix'
             : 'assets/images/icon/status_2.$suffix',
       );
@@ -29,7 +33,9 @@ void main() {
     test('returns enhanced mode icon when core is started with TUN', () {
       expect(
         tray.getTryIcon(isStart: true, tunEnable: true),
-        Platform.isMacOS
+        Platform.isWindows
+            ? 'assets/images/icon.ico'
+            : Platform.isMacOS
             ? 'assets/images/icon/tray_flclash.$suffix'
             : 'assets/images/icon/status_3.$suffix',
       );

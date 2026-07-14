@@ -155,25 +155,38 @@ Future<int> _package(
   final depExit = await _ensureDependencies(platform, arch);
   if (depExit != 0) return depExit;
 
-  final activateResult = await Process.run('dart', [
-    'pub',
-    'global',
-    'activate',
-    '-s',
-    'git',
-    'https://github.com/chen08209/flutter_distributor.git',
-    '--git-ref',
-    'FlClash',
-    '--git-path',
-    'packages/flutter_distributor',
-  ]);
-  if (activateResult.exitCode != 0) {
-    stderr.write(activateResult.stderr);
-    return activateResult.exitCode;
+  final pubCache =
+      Platform.environment['PUB_CACHE'] ??
+      (Platform.isWindows
+          ? p.join(Platform.environment['LOCALAPPDATA'] ?? '', 'Pub', 'Cache')
+          : p.join(Platform.environment['HOME'] ?? '', '.pub-cache'));
+  final distributorCommand = Platform.isWindows
+      ? p.join(pubCache, 'bin', 'flutter_distributor.bat')
+      : p.join(pubCache, 'bin', 'flutter_distributor');
+  if (!File(distributorCommand).existsSync()) {
+    final activateResult = await Process.run('dart', [
+      'pub',
+      'global',
+      'activate',
+      '-s',
+      'git',
+      'https://github.com/chen08209/flutter_distributor.git',
+      '--git-ref',
+      'FlClash',
+      '--git-path',
+      'packages/flutter_distributor',
+    ]);
+    if (activateResult.exitCode != 0) {
+      stderr.write(activateResult.stderr);
+      return activateResult.exitCode;
+    }
   }
-
+  final commandPath = [
+    p.join(pubCache, 'bin'),
+    Platform.environment['PATH'],
+  ].whereType<String>().join(Platform.pathSeparator);
   final process = await Process.start(
-    'flutter_distributor',
+    distributorCommand,
     [
       'package',
       '--skip-clean',
@@ -188,15 +201,15 @@ Future<int> _package(
       ...descriptionArgs,
     ],
     includeParentEnvironment: true,
-    environment: {'ANDROID_ARCH': ?androidArch},
+    environment: {'ANDROID_ARCH': ?androidArch, 'PATH': commandPath},
     runInShell: Platform.isWindows,
   );
 
   process.stdout.listen((data) {
-    stdout.write(utf8.decode(data));
+    stdout.write(utf8.decode(data, allowMalformed: true));
   });
   process.stderr.listen((data) {
-    stderr.write(utf8.decode(data));
+    stderr.write(utf8.decode(data, allowMalformed: true));
   });
   final exitCode = await process.exitCode;
   return exitCode;

@@ -106,6 +106,7 @@ class GlobalState {
     container = ProviderContainer(
       overrides: [...appStateOverrides, ...configOverrides],
     );
+    await systemFontLoader.load(config.themeProps.fontFamily);
     final profiles = await database.profilesDao.query().get();
     container.read(profilesProvider.notifier).setAndReorder(profiles);
     await AppLocalizations.load(

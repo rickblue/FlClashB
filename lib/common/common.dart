@@ -7,6 +7,7 @@ export 'converter.dart';
 export 'datetime.dart';
 export 'file.dart';
 export 'fixed.dart';
+export 'font.dart';
 export 'function.dart';
 export 'future.dart';
 export 'http.dart';

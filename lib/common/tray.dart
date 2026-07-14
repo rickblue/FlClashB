@@ -32,6 +32,9 @@ class Tray {
   }
 
   String getTryIcon({required bool isStart, required bool tunEnable}) {
+    if (system.isWindows) {
+      return 'assets/images/icon.ico';
+    }
     if (system.isMacOS) {
       return 'assets/images/icon/tray_flclash.$trayIconSuffix';
     }
@@ -81,8 +84,8 @@ class Tray {
     final appLocalizations = currentAppLocalizations;
     final showMenuItem = MenuItem(
       label: appLocalizations.show,
-      onClick: (_) {
-        window?.show();
+      onClick: (_) async {
+        await window?.show();
       },
     );
     menuItems.add(showMenuItem);

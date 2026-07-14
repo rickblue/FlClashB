@@ -226,8 +226,8 @@ class _WindowHeaderState extends State<WindowHeader> {
           ),
         ),
         IconButton(
-          onPressed: () {
-            globalState.container
+          onPressed: () async {
+            await globalState.container
                 .read(systemActionProvider.notifier)
                 .handleClose();
           },

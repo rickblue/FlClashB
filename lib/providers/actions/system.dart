@@ -61,6 +61,11 @@ class SystemAction extends _$SystemAction {
     if (ref.read(appSettingProvider).minimizeOnExit || !exit) {
       if (system.isDesktop) {
         await preferences.saveConfig(ref.read(configProvider));
+        try {
+          await updateTray();
+        } catch (_) {}
+        await window?.hide();
+        return;
       }
       await system.back();
     } else {
