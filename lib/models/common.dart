@@ -386,6 +386,10 @@ extension TrafficExt on Traffic {
     return '${up.shortTraffic.show}/s\n${down.shortTraffic.show}/s';
   }
 
+  String get linuxTrayTitle {
+    return '↓ ${down.shortTraffic.show}/s';
+  }
+
   num get speed => up + down;
 }
 

@@ -451,7 +451,7 @@ class _FontFamilyItem extends ConsumerStatefulWidget {
 }
 
 class _FontFamilyItemState extends ConsumerState<_FontFamilyItem> {
-  late final List<String> _families;
+  late List<String> _families;
 
   @override
   void initState() {
@@ -470,6 +470,7 @@ class _FontFamilyItemState extends ConsumerState<_FontFamilyItem> {
   }
 
   Future<void> _showFontDialog(String? selectedFamily) async {
+    _families = systemFontLoader.refreshFamilies();
     final value = await globalState.showCommonDialog<String>(
       child: _FontFamilyDialog(
         families: _families,

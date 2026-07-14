@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:test/test.dart';
 
 import '../setup.dart' as setup;
@@ -45,6 +47,18 @@ void main() {
         'dart-define-from-file=env.json',
         'split-per-abi',
       ]);
+    });
+
+    test('Debian installer authorizes the Linux core once at install time', () {
+      final config = File(
+        'linux/packaging/deb/make_config.yaml',
+      ).readAsStringSync();
+
+      expect(
+        config,
+        contains('chown root:root /usr/share/FlClash/FlClashCore'),
+      );
+      expect(config, contains('chmod 6755 /usr/share/FlClash/FlClashCore'));
     });
   });
 }

@@ -179,6 +179,14 @@ class RustBuilder {
 
   Future<Map<String, String>> _buildEnvironment() async {
     if (target.android == null) {
+      if (target.rust == 'x86_64-unknown-linux-gnu') {
+        return {
+          'CC': '/usr/bin/gcc',
+          'CXX': '/usr/bin/g++',
+          'RUSTFLAGS': '-C linker=/usr/bin/gcc',
+          'CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER': '/usr/bin/gcc',
+        };
+      }
       return {};
     } else {
       final sdkPath = environment.androidSdkPath;

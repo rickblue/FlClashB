@@ -204,4 +204,25 @@ void main() {
     expect(encoded, contains('\n'));
     expect(await mapListTask([1, 2, 3], _double), [2, 4, 6]);
   });
+
+  group('normalizeLinuxDnsListen', () {
+    test('moves wildcard DNS listeners away from port 53', () {
+      final config = <String, dynamic>{
+        'dns': <String, dynamic>{'enable': true, 'listen': '0.0.0.0:53'},
+      };
+
+      final normalized = normalizeLinuxDnsListen(config);
+
+      expect(normalized['dns']['listen'], '0.0.0.0:1053');
+      expect(config['dns']['listen'], '0.0.0.0:53');
+    });
+
+    test('preserves explicit non-conflicting listeners', () {
+      final config = <String, dynamic>{
+        'dns': <String, dynamic>{'listen': '127.0.0.1:5353'},
+      };
+
+      expect(identical(normalizeLinuxDnsListen(config), config), isTrue);
+    });
+  });
 }

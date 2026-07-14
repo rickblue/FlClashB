@@ -199,6 +199,7 @@ void main() {
       expect(traffic.speedText, '↑ 1KB/s   ↓ 2KB/s');
       expect(traffic.desc, '1KB ↑ 2KB ↓');
       expect(traffic.trayTitle, '1 KB/s\n2 KB/s');
+      expect(traffic.linuxTrayTitle, '↓ 2 KB/s');
       expect(traffic.speed, 3072);
     });
   });

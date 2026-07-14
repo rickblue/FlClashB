@@ -7,6 +7,16 @@ import 'package:launch_at_startup/launch_at_startup.dart';
 import 'constant.dart';
 import 'system.dart';
 
+const _linuxAutostartDelaySeconds = 5;
+
+@visibleForTesting
+String addLinuxAutostartDelay(String contents) {
+  const key = 'X-GNOME-Autostart-Delay=';
+  final lines = contents.trimRight().split('\n')
+    ..removeWhere((line) => line.startsWith(key));
+  return '${lines.join('\n')}\n$key$_linuxAutostartDelaySeconds\n';
+}
+
 class AutoLaunch {
   static AutoLaunch? _instance;
 
@@ -27,7 +37,11 @@ class AutoLaunch {
   }
 
   Future<bool> enable() async {
-    return launchAtStartup.enable();
+    final enabled = await launchAtStartup.enable();
+    if (enabled) {
+      await _ensureLinuxAutostartDelay();
+    }
+    return enabled;
   }
 
   Future<bool> disable() async {
@@ -38,11 +52,29 @@ class AutoLaunch {
     if (kDebugMode) {
       return;
     }
-    if (await isEnable == isAutoLaunch) return;
+    if (await isEnable == isAutoLaunch) {
+      if (isAutoLaunch) {
+        await _ensureLinuxAutostartDelay();
+      }
+      return;
+    }
     if (isAutoLaunch == true) {
-      enable();
+      await enable();
     } else {
-      disable();
+      await disable();
+    }
+  }
+
+  Future<void> _ensureLinuxAutostartDelay() async {
+    if (!system.isLinux) return;
+    final desktopFile = File(
+      '${Platform.environment['HOME']}/.config/autostart/$appName.desktop',
+    );
+    if (!await desktopFile.exists()) return;
+    final contents = await desktopFile.readAsString();
+    final updated = addLinuxAutostartDelay(contents);
+    if (updated != contents) {
+      await desktopFile.writeAsString(updated);
     }
   }
 }

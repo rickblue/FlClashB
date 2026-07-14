@@ -301,6 +301,9 @@ class SetupAction extends _$SetupAction {
     if (scriptContent?.isNotEmpty == true) {
       rawConfig = await handleEvaluate(scriptContent!, rawConfig);
     }
+    if (system.isLinux && !overrideDns) {
+      rawConfig = normalizeLinuxDnsListen(rawConfig);
+    }
     final directory = await appPath.profilesPath;
     final res = makeRealProfileTask(
       MakeRealProfileState(

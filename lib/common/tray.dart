@@ -35,7 +35,7 @@ class Tray {
     if (system.isWindows) {
       return 'assets/images/icon.ico';
     }
-    if (system.isMacOS) {
+    if (system.isMacOS || system.isLinux) {
       return 'assets/images/icon/tray_flclash.$trayIconSuffix';
     }
     if (!isStart) {
@@ -97,7 +97,7 @@ class Tray {
       checked: false,
     );
     menuItems.add(startMenuItem);
-    if (system.isMacOS) {
+    if (system.isMacOS || system.isLinux) {
       final speedStatistics = MenuItem.checkbox(
         label: appLocalizations.speedStatistics,
         onClick: (_) async {
@@ -210,13 +210,15 @@ class Tray {
     required bool showTrayTitle,
     required Traffic traffic,
   }) async {
-    if (!system.isMacOS) {
+    if (!system.isMacOS && !system.isLinux) {
       return;
     }
     if (!showTrayTitle) {
       await trayManager.setTitle('');
     } else {
-      await trayManager.setTitle(traffic.trayTitle);
+      await trayManager.setTitle(
+        system.isLinux ? traffic.linuxTrayTitle : traffic.trayTitle,
+      );
     }
   }
 

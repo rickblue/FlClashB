@@ -15,6 +15,10 @@ dependencies:
   - libkeybinder-3.0-dev
   - libsecret-1-0
 
+postinstall_scripts:
+  - chown root:root /usr/share/FlClash/FlClashCore
+  - chmod 6755 /usr/share/FlClash/FlClashCore
+
 keywords:
   - FlClash
   - Clash

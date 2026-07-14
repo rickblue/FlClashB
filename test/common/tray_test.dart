@@ -13,7 +13,7 @@ void main() {
         tray.getTryIcon(isStart: false, tunEnable: false),
         Platform.isWindows
             ? 'assets/images/icon.ico'
-            : Platform.isMacOS
+            : Platform.isMacOS || Platform.isLinux
             ? 'assets/images/icon/tray_flclash.$suffix'
             : 'assets/images/icon/status_1.$suffix',
       );
@@ -24,7 +24,7 @@ void main() {
         tray.getTryIcon(isStart: true, tunEnable: false),
         Platform.isWindows
             ? 'assets/images/icon.ico'
-            : Platform.isMacOS
+            : Platform.isMacOS || Platform.isLinux
             ? 'assets/images/icon/tray_flclash.$suffix'
             : 'assets/images/icon/status_2.$suffix',
       );
@@ -35,7 +35,7 @@ void main() {
         tray.getTryIcon(isStart: true, tunEnable: true),
         Platform.isWindows
             ? 'assets/images/icon.ico'
-            : Platform.isMacOS
+            : Platform.isMacOS || Platform.isLinux
             ? 'assets/images/icon/tray_flclash.$suffix'
             : 'assets/images/icon/status_3.$suffix',
       );

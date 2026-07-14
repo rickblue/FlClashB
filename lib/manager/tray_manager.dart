@@ -24,7 +24,7 @@ class _TrayContainerState extends ConsumerState<TrayManager> with TrayListener {
         ref.read(systemActionProvider.notifier).updateTray();
       }
     });
-    if (system.isMacOS) {
+    if (system.isMacOS || system.isLinux) {
       ref.listenManual(trayTitleStateProvider, (prev, next) {
         if (prev != next) {
           tray?.updateTrayTitle(

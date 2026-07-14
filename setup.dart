@@ -335,6 +335,9 @@ Future<int> _ensureLinuxDependencies(String arch) async {
 }
 
 Future<bool> _isDebianPackageInstalled(String pkg) async {
+  if (pkg == 'libfuse2' && await _isDebianPackageInstalled('libfuse2t64')) {
+    return true;
+  }
   final result = await Process.run('dpkg', ['-s', pkg]);
   return result.exitCode == 0 &&
       (result.stdout as String).contains('Status: install ok installed');

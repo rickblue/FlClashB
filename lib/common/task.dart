@@ -91,6 +91,22 @@ Future<VM2<String, String>> makeRealProfileTask(
   );
 }
 
+Map<String, dynamic> normalizeLinuxDnsListen(Map<String, dynamic> rawConfig) {
+  final dns = rawConfig['dns'];
+  if (dns is! Map) return rawConfig;
+  const replacements = {
+    '0.0.0.0:53': '0.0.0.0:1053',
+    '[::]:53': '[::]:1053',
+    ':53': ':1053',
+    '*:53': '*:1053',
+  };
+  final listen = dns['listen'];
+  final replacement = replacements[listen];
+  if (replacement == null) return rawConfig;
+  return Map<String, dynamic>.from(rawConfig)
+    ..['dns'] = (Map<String, dynamic>.from(dns)..['listen'] = replacement);
+}
+
 Future<VM2<String, String>> _makeRealProfileTask(
   MakeRealProfileState data,
 ) async {
@@ -114,6 +130,7 @@ Future<VM2<String, String>> _makeRealProfileTask(
 
   rawConfig['external-controller'] = realPatchConfig.externalController.value;
   rawConfig['external-ui'] = '';
+  rawConfig['external-ui-name'] = '';
   rawConfig['interface-name'] = '';
   rawConfig['external-ui-url'] = '';
   rawConfig['tcp-concurrent'] = realPatchConfig.tcpConcurrent;
