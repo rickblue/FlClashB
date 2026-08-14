@@ -11,6 +11,7 @@ import 'package:window_manager/window_manager.dart';
 class Window {
   static Window? _instance;
   final Completer<void> _readyCompleter = Completer<void>();
+  Future<void>? _showOperation;
 
   Window._internal();
 
@@ -87,15 +88,48 @@ class Window {
     }
   }
 
-  Future<void> show() async {
-    render?.resume();
-    commonPrint.log('window show');
-    if (await windowManager.isMinimized()) {
-      await windowManager.restore();
+  Future<void> show() {
+    final pendingOperation = _showOperation;
+    if (pendingOperation != null) {
+      return pendingOperation;
     }
-    await windowManager.show();
-    await windowManager.focus();
+    final operation = _show();
+    _showOperation = operation;
+    return operation.whenComplete(() {
+      if (identical(_showOperation, operation)) {
+        _showOperation = null;
+      }
+    });
+  }
+
+  Future<void> _show() async {
+    commonPrint.log('window show');
     await windowManager.setSkipTaskbar(false);
+    await windowManager.show();
+    if (system.isLinux) {
+      final wasAlwaysOnTop = await windowManager.isAlwaysOnTop();
+      if (!wasAlwaysOnTop) {
+        await windowManager.setAlwaysOnTop(true);
+      }
+      try {
+        // GNOME can reject a repeated gtk_window_present() after a tray menu
+        // callback. A short keep-above pulse still maps the window reliably.
+        await windowManager.restore();
+        await windowManager.focus();
+        render?.resume();
+        if (!wasAlwaysOnTop) {
+          await Future<void>.delayed(const Duration(milliseconds: 150));
+        }
+      } finally {
+        if (!wasAlwaysOnTop) {
+          await windowManager.setAlwaysOnTop(false);
+        }
+        render?.resume();
+      }
+      return;
+    }
+    await windowManager.focus();
+    render?.resume();
   }
 
   Future<bool> get isVisible async {
