@@ -68,4 +68,18 @@ void main() {
       expect(calls.where((call) => call.method == 'setAlwaysOnTop'), isEmpty);
     }
   });
+
+  test('minimize hides on Linux so the tray can restore it', () async {
+    await Window().minimize();
+
+    if (Platform.isLinux) {
+      // GNOME Wayland cannot restore a compositor-minimized window, so on
+      // Linux the window is hidden (unmapped) instead of iconified; the tray
+      // "show" action maps it again via show().
+      expect(calls.map((call) => call.method), ['hide', 'setSkipTaskbar']);
+      expect(calls[1].arguments, {'isSkipTaskbar': true});
+    } else {
+      expect(calls.map((call) => call.method), ['minimize']);
+    }
+  });
 }

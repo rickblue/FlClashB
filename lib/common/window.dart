@@ -153,6 +153,23 @@ class Window {
     await windowManager.setSkipTaskbar(true);
   }
 
+  /// Minimizes the window.
+  ///
+  /// On Linux this hides (unmaps) the window instead of asking the window
+  /// manager to iconify it: GNOME Wayland cannot restore a
+  /// compositor-minimized window from the client side (GTK deiconify is
+  /// X11-only and GDK never reports the ICONIFIED state on Wayland), so a
+  /// tray "show" action would never bring the window back. Hide/show
+  /// (unmap/map) is fully supported on Wayland, so the tray can always
+  /// restore the window via [show].
+  Future<void> minimize() async {
+    if (system.isLinux) {
+      await hide();
+    } else {
+      await windowManager.minimize();
+    }
+  }
+
   Future<Size?> get size async {
     if (!kIsWeb && system.isDesktop) {
       final value = await windowManager.getSize();

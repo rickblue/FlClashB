@@ -208,7 +208,7 @@ class _WindowHeaderState extends State<WindowHeader> {
         ),
         IconButton(
           onPressed: () {
-            windowManager.minimize();
+            window?.minimize();
           },
           icon: const Icon(Icons.remove),
         ),
