@@ -150,3 +150,66 @@ The easiest way to support developers is to click on the star (⭐) at the top o
         <img alt="start" width=50% src="https://api.star-history.com/svg?repos=chen08209/FlClash&Date"/>
     </a>
 </p>
+
+---
+
+## Fork Development Notes (flClashBLocal)
+
+> Fork 维护笔记：此仓库为 [chen08209/FlClash](https://github.com/chen08209/FlClash) 的 fork，自定义分支 `flClashBLocal`。
+> 项目情况以本 README 为准（CLAUDE.md 已废弃删除）。
+
+### Remotes
+
+- `upstream` = https://github.com/chen08209/FlClash （上游，`main`）
+- `origin` = https://github.com/rickblue/FlClashB （fork，`flClashBLocal`）
+- 注意：`origin` 的 fetch refspec 只拉取 `flClashBLocal` 单分支，需要同步上游时用 `upstream`
+
+### 自定义改动（相对上游）
+
+- `lib/views/access.dart`：手动添加包名功能
+- `core/hub.go`：`handleGetProxies()` 直接遍历 `tunnel.Proxies()`；`handleUpdateConfig` 带 TUN 调试日志（`/tmp/flclash_tun_debug.log`）
+- `android/service/build.gradle.kts`：`buildToolsVersion = "36.1.0"`
+- `pubspec.yaml`：`material_color_utilities ^0.13.0`、`system_fonts ^1.0.1`
+- `arb/intl_*.arb` + `lib/l10n/`：`manualAddPackage`/`manualAdded`/`invalidPackageName`/`packageAlreadyExists`/`inputPackageName`/`systemFont` 键
+- 其他：自定义字体选择、tray 图标改进、Linux 窗口恢复、CI workflow（macOS DMG / Windows x64）
+
+### 上游同步流程
+
+```bash
+git fetch upstream main
+git checkout flClashBLocal
+git rebase upstream/main
+# 解决冲突（重点：core/hub.go、lib/views/access.dart、arb/*、pubspec.yaml）
+flutter pub get
+dart run build_runner build --delete-conflicting-outputs
+dart run intl_utils:generate
+# core/Clash.Meta 子模块有更新时：
+git submodule update --init --recursive
+rm -rf android/core/.cxx/ android/core/build/ android/app/build/
+flutter build apk --release
+git push origin flClashBLocal --force-with-lease
+```
+
+### 构建注意事项（本机环境）
+
+- **home 目录只读**：系统 snap 版 flutter 不可用；使用仓库内 `.flutter_sdk`（Flutter 3.47.0）
+- `PUB_CACHE`/`GOMODCACHE`/`GOCACHE` 需指向可写位置（`.pub-cache`/`.gomod`/`.gocache`，已在 `.gitignore` 中）
+- 系统 Java 25 会导致 Gradle 直接调用失败；`flutter build` 使用 Android Studio 自带的 JDK 21
+- 构建前必须清理 `android/core/.cxx/`，否则 CMake 可能使用缓存的 stub 分支
+- `libcore.so` 正常大小 8-13KB（JNI bridge），`libclash.so` 正常大小 ~36MB
+- 只构建 Android/macOS/Windows，不构建 Linux 版本
+
+### macOS TUN setuid（post-build）
+
+macOS SIP 阻止在用户目录下 `chown`。在 `/tmp` 准备 setuid 副本再硬链接回 app bundle，group 必须是 `admin`（`checkIsAdmin()` 检查 `root:admin`）：
+
+```bash
+BINARY="build/macos/Build/Products/Release/FlClash.app/Contents/MacOS/FlClashCore"
+cp "$BINARY" /tmp/FlClashCore
+sudo chown root:admin /tmp/FlClashCore && sudo chmod u+s,g+s /tmp/FlClashCore
+rm "$BINARY"
+ln /tmp/FlClashCore "$BINARY"
+codesign --force --sign - "build/macos/Build/Products/Release/FlClash.app"
+```
+
+> `authorizeCore()`（`lib/common/system.dart`）已更新为使用 `ln -f` 自动完成此操作。
