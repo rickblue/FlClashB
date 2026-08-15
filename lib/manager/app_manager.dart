@@ -276,7 +276,7 @@ class AppSidebarContainer extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '0.8.94-B',
+                      '${globalState.packageInfo.version}-B',
                       style: context.textTheme.labelSmall?.copyWith(
                         color: context.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                       ),
