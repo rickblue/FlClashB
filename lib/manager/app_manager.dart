@@ -287,7 +287,6 @@ class AppSidebarContainer extends ConsumerWidget {
               ),
             ),
           ),
-          ),
           Expanded(
             flex: 1,
             child: ClipRect(

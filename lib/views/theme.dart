@@ -565,12 +565,12 @@ class _FontFamilyDialogState extends State<_FontFamilyDialog> {
                   children: [
                     ListItem<String>.radio(
                       title: Text(appLocalizations.systemFont),
-                      delegate: const RadioDelegate<String>(value: ''),
+                      value: '',
                     ),
                     for (final family in families)
                       ListItem<String>.radio(
                         title: Text(family),
-                        delegate: RadioDelegate<String>(value: family),
+                        value: family,
                       ),
                   ],
                 ),

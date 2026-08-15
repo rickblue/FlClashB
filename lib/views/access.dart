@@ -386,12 +386,10 @@ class _AccessViewState extends ConsumerState<AccessView> {
                       ),
                       maxLines: 1,
                     ),
-                    delegate: CheckboxDelegate(
-                      value: true,
-                      onChanged: (_) {
-                        _handleSelected(packageName);
-                      },
-                    ),
+                    value: true,
+                    onChanged: (_) {
+                      _handleSelected(packageName);
+                    },
                   ),
                 );
               }

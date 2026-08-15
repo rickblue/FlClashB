@@ -4529,11 +4529,6 @@ class AppLocalizations {
     );
   }
 
-  /// `System Font`
-  String get systemFont {
-    return Intl.message('System Font', name: 'systemFont', desc: '', args: []);
-  }
-
   /// `Manual add package`
   String get manualAddPackage {
     return Intl.message(
