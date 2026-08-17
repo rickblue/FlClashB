@@ -39,7 +39,6 @@ class Window {
       await _readyCompleter.future;
       await show();
     });
-    // kDebugMode ? Size(680, 580) :
     final WindowOptions windowOptions = WindowOptions(
       size: props.size,
       minimumSize: const Size(380, 400),
