@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"cmp"
 	"context"
 	"github.com/metacubex/mihomo/adapter"
@@ -97,25 +96,21 @@ func handleGetProxies() ProxiesData {
 	runLock.Lock()
 	defer runLock.Unlock()
 
-	proxies := make(map[string]constant.Proxy)
+	nameList := config.GetProxyNameList()
 
-	for name, proxy := range tunnel.Proxies() {
-		proxies[name] = proxy
-	}
-	for _, p := range tunnel.Providers() {
-		for _, proxy := range p.Proxies() {
-			proxies[proxy.Name()] = proxy
-		}
-	}
+	proxies := tunnel.AllProxies()
 
 	hasGlobal := false
-	allNames := make([]string, 0)
 
-	for name, p := range proxies {
+	allNames := make([]string, 0, len(nameList)+1)
+
+	for _, name := range nameList {
 		if name == "GLOBAL" {
 			hasGlobal = true
 		}
-		if p == nil {
+
+		p, ok := proxies[name]
+		if !ok || p == nil {
 			continue
 		}
 		switch p.Type() {
@@ -143,7 +138,7 @@ func handleChangeProxy(params *ChangeProxyParams, fn func(string string)) {
 		defer runLock.Unlock()
 		groupName := params.GroupName
 		proxyName := params.ProxyName
-		proxies := tunnel.Proxies()
+		proxies := tunnel.AllProxies()
 		group, ok := proxies[groupName]
 		if !ok {
 			fn("Not found group")
@@ -216,7 +211,7 @@ func handleAsyncTestDelay(params *TestDelayParams, fn func(*Delay)) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(params.Timeout))
 		defer cancel()
 
-		proxies := tunnel.Proxies()
+		proxies := tunnel.AllProxies()
 		proxy := proxies[params.ProxyName]
 
 		if proxy == nil {
@@ -439,13 +434,6 @@ func handleCrash() {
 }
 
 func handleUpdateConfig(params *UpdateParams) string {
-	f, _ := os.OpenFile("/tmp/flclash_tun_debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if f != nil {
-		tunStr := "nil"
-		if params.Tun != nil { tunStr = fmt.Sprintf("enable=%v", params.Tun.Enable) }
-		fmt.Fprintf(f, "[TUN-DEBUG] handleUpdateConfig called, tun=%s\n", tunStr)
-		f.Close()
-	}
 	updateConfig(params)
 	return ""
 }

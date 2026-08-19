@@ -142,7 +142,7 @@ func stopListeners() {
 }
 
 func patchSelectGroup(mapping map[string]string) {
-	for name, proxy := range tunnel.Proxies() {
+	for name, proxy := range tunnel.AllProxies() {
 		outbound, ok := proxy.(*adapter.Proxy)
 		if !ok {
 			continue
@@ -184,12 +184,6 @@ func readFile(path string) ([]byte, error) {
 func updateConfig(params *UpdateParams) {
 	runLock.Lock()
 	defer runLock.Unlock()
-	if f, err := os.OpenFile("/tmp/flclash_tun_debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
-		tunStr := "nil"
-		if params.Tun != nil { tunStr = fmt.Sprintf("enable=%v", params.Tun.Enable) }
-		fmt.Fprintf(f, "[TUN-DEBUG] updateConfig called, tun=%s\n", tunStr)
-		f.Close()
-	}
 	general := currentConfig.General
 	if params.MixedPort != nil {
 		general.MixedPort = *params.MixedPort
