@@ -21,10 +21,7 @@ class AutoLaunch {
   static AutoLaunch? _instance;
 
   AutoLaunch._internal() {
-    launchAtStartup.setup(
-      appName: appName,
-      appPath: Platform.resolvedExecutable,
-    );
+    launcher.setup(appName: appName, appPath: Platform.resolvedExecutable);
   }
 
   factory AutoLaunch() {
@@ -32,12 +29,15 @@ class AutoLaunch {
     return _instance!;
   }
 
+  @visibleForTesting
+  static LaunchAtStartup launcher = launchAtStartup;
+
   Future<bool> get isEnable async {
-    return launchAtStartup.isEnabled();
+    return launcher.isEnabled();
   }
 
   Future<bool> enable() async {
-    final enabled = await launchAtStartup.enable();
+    final enabled = await launcher.enable();
     if (enabled) {
       await _ensureLinuxAutostartDelay();
     }
@@ -45,7 +45,7 @@ class AutoLaunch {
   }
 
   Future<bool> disable() async {
-    return launchAtStartup.disable();
+    return launcher.disable();
   }
 
   Future<void> updateStatus(bool isAutoLaunch) async {

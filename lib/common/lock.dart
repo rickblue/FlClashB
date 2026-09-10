@@ -3,7 +3,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/enum/enum.dart';
+import 'package:flutter/foundation.dart';
 
+/// Keeps two processes off one data directory. Raising the running window is
+/// the platform's job: LaunchServices reopen, GApplication activation, or the
+/// app_links hand-off in the Windows runner.
 class SingleInstanceLock {
   static SingleInstanceLock? _instance;
   RandomAccessFile? _accessFile;
@@ -19,16 +24,23 @@ class SingleInstanceLock {
     return _instance!;
   }
 
+  @visibleForTesting
+  static Future<String> Function() resolvePath = () => appPath.lockFilePath;
+
   Future<bool> acquire() async {
-    final lockFilePath = await appPath.lockFilePath;
+    final lockFilePath = await resolvePath();
     final lockFile = File(lockFilePath);
     try {
       await lockFile.create();
       _accessFile = await lockFile.open(mode: FileMode.write);
       await _accessFile?.lock();
       return true;
-    } catch (_) {
+    } catch (e) {
       await _activateExistingInstance(lockFilePath);
+      commonPrint.log(
+        'single instance lock acquire failed ${e.toString()}',
+        logLevel: LogLevel.warning,
+      );
       return false;
     }
   }
@@ -37,7 +49,7 @@ class SingleInstanceLock {
     if (!system.isWindows || _activationServer != null) {
       return;
     }
-    final lockFilePath = await appPath.lockFilePath;
+    final lockFilePath = await resolvePath();
     try {
       final server = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
       _activationServer = server;
@@ -81,6 +93,14 @@ class SingleInstanceLock {
       } catch (_) {}
       await Future<void>.delayed(const Duration(milliseconds: 150));
     }
+  }
+
+  @visibleForTesting
+  Future<void> release() async {
+    await _activationServer?.close();
+    _activationServer = null;
+    await _accessFile?.close();
+    _accessFile = null;
   }
 }
 

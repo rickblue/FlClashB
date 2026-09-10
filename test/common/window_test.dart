@@ -1,85 +1,127 @@
-import 'dart:io';
-
 import 'package:fl_clash/common/window.dart';
+import 'package:fl_clash/models/config.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+const _windowChannel = MethodChannel('window_manager');
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const channel = MethodChannel('window_manager');
-  final calls = <MethodCall>[];
-  var isAlwaysOnTop = false;
+  late List<String> calls;
+  late bool isVisible;
+  late bool isMaximized;
+  late bool isFullScreen;
+  late bool isMinimized;
+  late Rect bounds;
 
   setUp(() {
-    calls.clear();
-    isAlwaysOnTop = false;
+    calls = <String>[];
+    isVisible = true;
+    isMaximized = false;
+    isFullScreen = false;
+    isMinimized = false;
+    bounds = const Rect.fromLTWH(20, 30, 1000, 800);
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, (call) async {
-          calls.add(call);
-          if (call.method == 'isMinimized') {
-            return false;
-          }
-          if (call.method == 'isAlwaysOnTop') {
-            return isAlwaysOnTop;
-          }
-          return true;
+        .setMockMethodCallHandler(_windowChannel, (call) async {
+          calls.add(call.method);
+          return switch (call.method) {
+            'isVisible' => isVisible,
+            'isMaximized' => isMaximized,
+            'isFullScreen' => isFullScreen,
+            'isMinimized' => isMinimized,
+            'getBounds' => <String, double>{
+              'x': bounds.left,
+              'y': bounds.top,
+              'width': bounds.width,
+              'height': bounds.height,
+            },
+            _ => null,
+          };
         });
   });
 
   tearDown(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, null);
+        .setMockMethodCallHandler(_windowChannel, null);
+  });
+
+  test('is a singleton so every caller drives the same window', () {
+    expect(Window(), same(Window()));
+  });
+
+  testWidgets('show raises the window and puts it back on the taskbar', (
+    tester,
+  ) async {
+    await Window().show();
+
+    expect(
+      calls,
+      containsAllInOrder(<String>['show', 'focus', 'setSkipTaskbar']),
+    );
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  test('hide drops the window off the taskbar', () async {
+    await Window().hide();
+
+    expect(calls, containsAllInOrder(<String>['hide', 'setSkipTaskbar']));
+  });
+
+  test('close asks the platform to close the window', () async {
+    await Window().close();
+
+    expect(calls, ['close']);
+  });
+
+  testWidgets('toggle hides a visible window and shows a hidden one', (
+    tester,
+  ) async {
+    await Window().toggle();
+
+    expect(
+      calls,
+      containsAllInOrder(<String>['isVisible', 'hide', 'setSkipTaskbar']),
+    );
+
+    calls.clear();
+    isVisible = false;
+    await Window().toggle();
+
+    expect(
+      calls,
+      containsAllInOrder(<String>['isVisible', 'show', 'setSkipTaskbar']),
+    );
+    await tester.pump(const Duration(seconds: 1));
   });
 
   test(
-    'show restores taskbar visibility before presenting the window',
+    'normal geometry captures size without compositor-owned position',
     () async {
-      await Window().show();
+      const current = WindowProps(width: 800, height: 600, left: 90, top: 70);
 
-      expect(calls.map((call) => call.method), [
-        'setSkipTaskbar',
-        'isMinimized',
-        'show',
-        if (Platform.isLinux) ...['isAlwaysOnTop', 'setAlwaysOnTop', 'restore'],
-        'focus',
-        if (Platform.isLinux) 'setAlwaysOnTop',
-      ]);
-      expect(calls.first.arguments, {'isSkipTaskbar': false});
-      if (Platform.isLinux) {
-        expect(calls[4].arguments, {'isAlwaysOnTop': true});
-        expect(calls.last.arguments, {'isAlwaysOnTop': false});
-      }
+      final geometry = await Window().captureNormalGeometry(current);
+
+      expect(
+        geometry,
+        const WindowProps(width: 1000, height: 800, left: 90, top: 70),
+      );
     },
   );
 
-  test('show coalesces concurrent requests', () async {
-    await Future.wait([Window().show(), Window().show(), Window().show()]);
+  test('maximized geometry is not captured', () async {
+    isMaximized = true;
 
-    expect(calls.where((call) => call.method == 'show'), hasLength(1));
+    expect(await Window().captureNormalGeometry(const WindowProps()), isNull);
+    expect(calls, isNot(contains('getBounds')));
   });
 
-  test('show preserves an existing always-on-top setting', () async {
-    isAlwaysOnTop = true;
+  test('fullscreen and minimized geometry are not captured', () async {
+    isFullScreen = true;
+    expect(await Window().captureNormalGeometry(const WindowProps()), isNull);
 
-    await Window().show();
-
-    if (Platform.isLinux) {
-      expect(calls.where((call) => call.method == 'setAlwaysOnTop'), isEmpty);
-    }
-  });
-
-  test('minimize hides on Linux so the tray can restore it', () async {
-    await Window().minimize();
-
-    if (Platform.isLinux) {
-      // GNOME Wayland cannot restore a compositor-minimized window, so on
-      // Linux the window is hidden (unmapped) instead of iconified; the tray
-      // "show" action maps it again via show().
-      expect(calls.map((call) => call.method), ['hide', 'setSkipTaskbar']);
-      expect(calls[1].arguments, {'isSkipTaskbar': true});
-    } else {
-      expect(calls.map((call) => call.method), ['minimize']);
-    }
+    isFullScreen = false;
+    isMinimized = true;
+    expect(await Window().captureNormalGeometry(const WindowProps()), isNull);
   });
 }

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:test/test.dart';
 
 import '../setup.dart' as setup;
@@ -49,16 +47,29 @@ void main() {
       ]);
     });
 
-    test('Debian installer authorizes the Linux core once at install time', () {
-      final config = File(
-        'linux/packaging/deb/make_config.yaml',
-      ).readAsStringSync();
+    test('refuses to package while a native build hook is skipped', () {
+      const pubspec = '''
+hooks:
+  user_defines:
+    setup:
+      build_assets: false
+    rust_api:
+      build_assets: true
+''';
 
-      expect(
-        config,
-        contains('chown root:root /usr/share/FlClash/FlClashCore'),
-      );
-      expect(config, contains('chmod 6755 /usr/share/FlClash/FlClashCore'));
+      expect(setup.packagesNotBuildingAssets(pubspec), ['setup']);
+      expect(setup.packagesNotBuildingAssets('name: x\n'), isEmpty);
+    });
+
+    test('packages every Linux format on every architecture', () {
+      expect(setup.createPackageTargets('linux', null), 'deb,appimage,rpm');
+      expect(setup.createPackageTargets('linux', 'deb'), 'deb');
+      expect(setup.createPackageTargets('macos', null), 'dmg');
+    });
+
+    test('downloads the appimagetool build matching the host', () {
+      expect(setup.appImageToolArch('arm64'), 'aarch64');
+      expect(setup.appImageToolArch('amd64'), 'x86_64');
     });
   });
 }

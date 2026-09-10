@@ -3,10 +3,11 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:path/path.dart' as p;
+import 'package:yaml/yaml.dart';
 
 const _allTargets = <String, String>{
   'android': 'apk',
-  'linux': 'deb', // appimage + rpm added for amd64 only
+  'linux': 'deb,appimage,rpm',
   'macos': 'dmg',
   'windows': 'exe,zip',
 };
@@ -53,8 +54,20 @@ Future<void> main(List<String> args) async {
 
   final env = results['env'] as String;
   final rootDir = Directory.current.path;
+  final skipped = packagesNotBuildingAssets(
+    File(p.join(rootDir, 'pubspec.yaml')).readAsStringSync(),
+  );
+  if (skipped.isNotEmpty) {
+    stderr.writeln(
+      'pubspec.yaml sets hooks.user_defines.<package>.build_assets: false '
+      'for ${skipped.join(', ')}; a package built this way would ship '
+      'whatever is left in libclash/ and no Rust library. '
+      'Restore "build_assets: true".',
+    );
+    exit(1);
+  }
   final arch = _detectArch();
-  final targets = _getTargets(platform, arch, results['targets']);
+  final targets = createPackageTargets(platform, results['targets']);
   final androidArch = results['arch'] as String?;
   final verbose = results['verbose'] as bool;
 
@@ -115,10 +128,20 @@ Map<String, String> createBuildEnvironment(String env) {
   return {'APP_ENV': env};
 }
 
-String _getTargets(String platform, String arch, String? customTargets) {
-  if (customTargets != null) return customTargets;
-  if (platform == 'linux' && arch == 'amd64') return 'deb,appimage,rpm';
-  return _allTargets[platform]!;
+/// Packages whose build hook `pubspec.yaml` turns into a no-op.
+List<String> packagesNotBuildingAssets(String pubspec) {
+  final document = loadYaml(pubspec);
+  if (document is! Map) return const [];
+  final defines = (document['hooks'] as Map?)?['user_defines'];
+  if (defines is! Map) return const [];
+  return [
+    for (final MapEntry(:key, :value) in defines.entries)
+      if (value is Map && value['build_assets'] == false) key.toString(),
+  ]..sort();
+}
+
+String createPackageTargets(String platform, String? customTargets) {
+  return customTargets ?? _allTargets[platform]!;
 }
 
 void _showHelp(ArgParser parser) {
@@ -152,8 +175,25 @@ Future<int> _package(
     descriptionArgs.addAll(['--description', arch]);
   }
 
-  final depExit = await _ensureDependencies(platform, arch);
+  final depExit = await _ensureDependencies(platform);
   if (depExit != 0) return depExit;
+
+  final activateResult = await Process.run('dart', [
+    'pub',
+    'global',
+    'activate',
+    '-s',
+    'git',
+    'https://github.com/chen08209/flutter_distributor.git',
+    '--git-ref',
+    'v0.6.11-flclash.2',
+    '--git-path',
+    'packages/flutter_distributor',
+  ]);
+  if (activateResult.exitCode != 0) {
+    stderr.write(activateResult.stderr);
+    return activateResult.exitCode;
+  }
 
   final pubCache =
       Platform.environment['PUB_CACHE'] ??
@@ -163,30 +203,16 @@ Future<int> _package(
   final distributorCommand = Platform.isWindows
       ? p.join(pubCache, 'bin', 'flutter_distributor.bat')
       : p.join(pubCache, 'bin', 'flutter_distributor');
-  if (!File(distributorCommand).existsSync()) {
-    final activateResult = await Process.run('dart', [
-      'pub',
-      'global',
-      'activate',
-      '-s',
-      'git',
-      'https://github.com/chen08209/flutter_distributor.git',
-      '--git-ref',
-      'FlClash',
-      '--git-path',
-      'packages/flutter_distributor',
-    ]);
-    if (activateResult.exitCode != 0) {
-      stderr.write(activateResult.stderr);
-      return activateResult.exitCode;
-    }
-  }
+  final command = File(distributorCommand).existsSync()
+      ? distributorCommand
+      : 'flutter_distributor';
   final commandPath = [
     p.join(pubCache, 'bin'),
     Platform.environment['PATH'],
   ].whereType<String>().join(Platform.pathSeparator);
+
   final process = await Process.start(
-    distributorCommand,
+    command,
     [
       'package',
       '--skip-clean',
@@ -201,15 +227,15 @@ Future<int> _package(
       ...descriptionArgs,
     ],
     includeParentEnvironment: true,
-    environment: {'ANDROID_ARCH': ?androidArch, 'PATH': commandPath},
+    environment: {'PATH': commandPath},
     runInShell: Platform.isWindows,
   );
 
   process.stdout.listen((data) {
-    stdout.write(utf8.decode(data, allowMalformed: true));
+    stdout.write(utf8.decode(data));
   });
   process.stderr.listen((data) {
-    stderr.write(utf8.decode(data, allowMalformed: true));
+    stderr.write(utf8.decode(data));
   });
   final exitCode = await process.exitCode;
   return exitCode;
@@ -234,12 +260,12 @@ Future<bool> _hasCommand(String cmd) async {
   return result.exitCode == 0;
 }
 
-Future<int> _ensureDependencies(String platform, String arch) async {
+Future<int> _ensureDependencies(String platform) async {
   switch (platform) {
     case 'macos':
       return _ensureMacosDependencies();
     case 'linux':
-      return _ensureLinuxDependencies(arch);
+      return _ensureLinuxDependencies();
     default:
       return 0;
   }
@@ -258,20 +284,15 @@ Future<int> _ensureMacosDependencies() async {
   return result.exitCode;
 }
 
-Future<int> _ensureLinuxDependencies(String arch) async {
-  final pkgGroups = <List<String>>[
+Future<int> _ensureLinuxDependencies() async {
+  const pkgGroups = <List<String>>[
     ['ninja-build', 'libgtk-3-dev'],
     ['libayatana-appindicator3-dev'],
-    ['libkeybinder-3.0-dev'],
     ['libsecret-1-dev'],
     ['locate'],
+    ['rpm', 'patchelf'],
+    ['libfuse2'],
   ];
-  if (arch == 'amd64') {
-    pkgGroups.addAll([
-      ['rpm', 'patchelf'],
-      ['libfuse2'],
-    ]);
-  }
 
   final missingGroups = <List<String>>[];
   for (final group in pkgGroups) {
@@ -311,36 +332,45 @@ Future<int> _ensureLinuxDependencies(String arch) async {
     }
   }
 
-  if (arch == 'amd64') {
-    const appimagetool = '/usr/local/bin/appimagetool';
-    if (File(appimagetool).existsSync()) {
-      stdout.writeln('appimagetool already installed, skipping.');
-      return 0;
-    }
-    stdout.writeln('Downloading appimagetool...');
-    final downloadName = arch == 'amd64' ? 'x86_64' : 'aarch64';
-    final dlResult = await Process.run('wget', [
-      '-O',
-      appimagetool,
-      'https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-$downloadName.AppImage',
-    ]);
-    if (dlResult.exitCode != 0) {
-      stderr.write(dlResult.stderr);
-      return dlResult.exitCode;
-    }
-    await Process.run('chmod', ['+x', appimagetool]);
+  const appimagetool = '/usr/local/bin/appimagetool';
+  if (File(appimagetool).existsSync()) {
+    stdout.writeln('appimagetool already installed, skipping.');
+    return 0;
   }
-
+  stdout.writeln('Downloading appimagetool...');
+  final downloadName =
+      'appimagetool-${appImageToolArch(_detectArch())}.AppImage';
+  final dlResult = await Process.run('wget', [
+    '-O',
+    appimagetool,
+    'https://github.com/AppImage/AppImageKit/releases/download/continuous/$downloadName',
+  ]);
+  if (dlResult.exitCode != 0) {
+    stderr.write(dlResult.stderr);
+    return dlResult.exitCode;
+  }
+  await Process.run('chmod', ['+x', appimagetool]);
   return 0;
 }
 
+String appImageToolArch(String arch) {
+  return arch == 'arm64' ? 'aarch64' : 'x86_64';
+}
+
+/// Ubuntu 24.04 ships libfuse2 under its time64 name, which `dpkg -s libfuse2` cannot see.
+const _debianPackageAliases = <String, List<String>>{
+  'libfuse2': ['libfuse2t64'],
+};
+
 Future<bool> _isDebianPackageInstalled(String pkg) async {
-  if (pkg == 'libfuse2' && await _isDebianPackageInstalled('libfuse2t64')) {
-    return true;
+  for (final name in [pkg, ...?_debianPackageAliases[pkg]]) {
+    final result = await Process.run('dpkg', ['-s', name]);
+    if (result.exitCode == 0 &&
+        (result.stdout as String).contains('Status: install ok installed')) {
+      return true;
+    }
   }
-  final result = await Process.run('dpkg', ['-s', pkg]);
-  return result.exitCode == 0 &&
-      (result.stdout as String).contains('Status: install ok installed');
+  return false;
 }
 
 Future<bool> _areDebianPackagesInstalled(List<String> pkgs) async {

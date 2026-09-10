@@ -49,16 +49,10 @@ app.*.map.json
 
 # Claude Code - ignore user-specific settings only
 .claude/settings.local.json
-/.claude
-
-#AI generated
-CLAUDE.md
-AGENTS.md
-env.json
+.claude/worktrees/
 
 # Documentation (generated/planning artifacts)
 docs/
-tool/
 
 
 # Android Studio will place build artifacts here
@@ -81,8 +75,8 @@ tool/
 /macos/build/
 /env.json
 /core_sha256.json
-/core/*.exe
 /plugins/rust_api/.claude/
+/issue-triage/
 devtools_options.yaml
 
 # FVM Version Cache
