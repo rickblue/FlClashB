@@ -33,6 +33,21 @@ rules:
     ]);
   });
 
+  test('yaml folding preserves collapsed chunks after edits', () {
+    final chunks = const YamlCodeChunkAnalyzer().run(
+      CodeLines.of([
+        const CodeLine('proxies:', [
+          CodeLine('  - name: first'),
+          CodeLine('    type: ss'),
+        ]),
+        const CodeLine('rules:'),
+        const CodeLine('  - MATCH,DIRECT'),
+      ]),
+    );
+
+    expect(chunks, const [CodeChunk(0, 1), CodeChunk(1, 3)]);
+  });
+
   testWidgets('page down scrolls the editor', (tester) async {
     final content = List<String>.generate(
       200,

@@ -712,7 +712,12 @@ class YamlCodeChunkAnalyzer implements CodeChunkAnalyzer {
       if (openChunks.isNotEmpty) {
         openChunks.last.hasChildren = true;
       }
-      openChunks.add(_YamlChunkStart(index: index, indent: indent));
+      final chunk = _YamlChunkStart(index: index, indent: indent);
+      if (codeLines[index].chunkParent) {
+        chunk.hasChildren = true;
+        chunks.add(CodeChunk(index, index + 1));
+      }
+      openChunks.add(chunk);
     }
     _closeOpenChunks(openChunks, chunks, codeLines.length);
     chunks.sort((a, b) => a.index.compareTo(b.index));

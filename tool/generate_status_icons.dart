@@ -39,10 +39,9 @@ Future<void> main() async {
   await _writeIco(logo, File(windowsAppIconOutput), sizes: icoSizes);
   for (var status = 0; status < statusIconNames.length; status++) {
     final name = statusIconNames[status];
-    final statusLogo = _buildTrayLogo(status);
-    await _writeTrayVariants(statusLogo, name);
-    await _writeIco(
-      statusLogo,
+    await _writeTrayVariants(status, name);
+    await _writeTrayIco(
+      status,
       File('$icoOutputDir/$name.ico'),
       sizes: trayIcoSizes,
     );
@@ -111,65 +110,70 @@ _Bounds _contentBounds(image.Image source, int left, int right) {
   return _Bounds(left: left, top: top, right: right, bottom: bottom);
 }
 
-image.Image _buildTrayLogo(int status) {
-  final stateColor = switch (status) {
-    0 => image.ColorRgba8(142, 142, 147, 255),
-    1 => image.ColorRgba8(255, 0, 23, 255),
-    2 => image.ColorRgba8(0, 200, 103, 255),
+image.Image _buildTrayLogo(int status, int size) {
+  const supersampling = 16;
+  final canvasSize = size * supersampling;
+  final red = switch (status) {
+    0 => image.ColorRgba8(168, 60, 71, 255),
+    1 => image.ColorRgba8(216, 24, 43, 255),
+    2 => image.ColorRgba8(237, 14, 31, 255),
     _ => throw ArgumentError.value(status, 'status'),
   };
-  final canvas = image.Image(width: 256, height: 256, numChannels: 4)
-    ..clear(image.ColorRgba8(0, 0, 0, 0));
-  final black = image.ColorRgba8(8, 8, 10, 255);
-  final white = image.ColorRgba8(255, 255, 255, 255);
+  final canvas = image.Image(
+    width: canvasSize,
+    height: canvasSize,
+    numChannels: 4,
+  )..clear(image.ColorRgba8(0, 0, 0, 0));
+  final black = image.ColorRgba8(9, 10, 13, 255);
   final transparent = image.ColorRgba8(0, 0, 0, 0);
-  image.fillCircle(canvas, x: 128, y: 128, radius: 121, color: black);
-  image.fillCircle(canvas, x: 128, y: 128, radius: 113, color: stateColor);
+  int point(double value) => (value / 18 * canvasSize).round();
   image.fillCircle(
     canvas,
-    x: 128,
-    y: 128,
-    radius: 94,
+    x: point(9),
+    y: point(9),
+    radius: point(8.075),
+    color: black,
+  );
+  image.fillCircle(
+    canvas,
+    x: point(9),
+    y: point(9),
+    radius: point(6.625),
     color: transparent,
     blend: image.BlendMode.direct,
   );
-  image.drawLine(
+  final vRadius = point(1.075);
+  final points = [
+    (x: point(4.55), y: point(5.25)),
+    (x: point(9), y: point(13.35)),
+    (x: point(13.45), y: point(5.25)),
+  ];
+  for (var index = 0; index < points.length - 1; index++) {
+    image.drawLine(
+      canvas,
+      x1: points[index].x,
+      y1: points[index].y,
+      x2: points[index + 1].x,
+      y2: points[index + 1].y,
+      color: red,
+      thickness: vRadius * 2,
+    );
+  }
+  for (final point in points) {
+    image.fillCircle(
+      canvas,
+      x: point.x,
+      y: point.y,
+      radius: vRadius,
+      color: red,
+    );
+  }
+  return image.copyResize(
     canvas,
-    x1: 57,
-    y1: 65,
-    x2: 128,
-    y2: 191,
-    color: black,
-    thickness: 57,
+    width: size,
+    height: size,
+    interpolation: image.Interpolation.average,
   );
-  image.drawLine(
-    canvas,
-    x1: 128,
-    y1: 191,
-    x2: 199,
-    y2: 65,
-    color: black,
-    thickness: 57,
-  );
-  image.drawLine(
-    canvas,
-    x1: 57,
-    y1: 65,
-    x2: 128,
-    y2: 191,
-    color: white,
-    thickness: 29,
-  );
-  image.drawLine(
-    canvas,
-    x1: 128,
-    y1: 191,
-    x2: 199,
-    y2: 65,
-    color: white,
-    thickness: 29,
-  );
-  return canvas;
 }
 
 image.Image _render(image.Image source, int size) {
@@ -181,14 +185,28 @@ image.Image _render(image.Image source, int size) {
   );
 }
 
-Future<void> _writeTrayVariants(image.Image source, String name) async {
+Future<void> _writeTrayVariants(int status, String name) async {
   for (final scale in trayScales) {
     final directory = scale == 1 ? pngOutputDir : '$pngOutputDir/$scale.0x';
     await _writePng(
       File('$directory/$name.png'),
-      _render(source, trayBaseSize * scale),
+      _buildTrayLogo(status, trayBaseSize * scale),
     );
   }
+}
+
+Future<void> _writeTrayIco(
+  int status,
+  File output, {
+  required List<int> sizes,
+}) async {
+  final entries = [
+    for (final size in sizes)
+      IcoEntry(size: size, png: image.encodePng(_buildTrayLogo(status, size))),
+  ];
+  await output.parent.create(recursive: true);
+  await output.writeAsBytes(buildIco(entries));
+  stdout.writeln('Generated ${output.path}');
 }
 
 Future<void> _writeIco(
