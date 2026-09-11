@@ -39,21 +39,8 @@ class AppTray implements TrayPort {
     return AppTray._internal(isMacOS: isMacOS, isWindows: isWindows);
   }
 
-  String get _trayIconSuffix {
-    return isWindows ? 'ico' : 'png';
-  }
-
-  String get _trayIconDir {
-    return isWindows ? 'assets/images/tray/windows' : 'assets/images/tray/unix';
-  }
-
-  String getTrayIcon({required bool isStart, required bool tunEnable}) {
-    final status = switch ((isMacOS || !isStart, tunEnable)) {
-      (true, _) => 1,
-      (false, false) => 2,
-      (false, true) => 3,
-    };
-    return '$_trayIconDir/status_$status.$_trayIconSuffix';
+  String getTrayIcon() {
+    return isWindows ? 'res/robotech.ico' : 'res/robotech.jpg';
   }
 
   @override
@@ -73,13 +60,7 @@ class AppTray implements TrayPort {
     }
     await Tray.instance.show(
       TraySpec(
-        icon: TrayIcon.asset(
-          getTrayIcon(
-            isStart: trayState.isStart,
-            tunEnable: trayState.tunEnable,
-          ),
-          isTemplate: isMacOS,
-        ),
+        icon: TrayIcon.asset(getTrayIcon()),
         toolTip: appName,
         menu: _buildMenu(trayState: trayState, read: read),
       ),

@@ -281,6 +281,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "createProfile": MessageLookupByLibrary.simpleMessage("プロファイルを作成"),
     "createProfileFromUrlTip": m2,
     "creationTime": MessageLookupByLibrary.simpleMessage("作成日時"),
+    "currentLineBackground": MessageLookupByLibrary.simpleMessage("現在行の背景色"),
+    "currentLineForeground": MessageLookupByLibrary.simpleMessage("現在行の前景色"),
     "custom": MessageLookupByLibrary.simpleMessage("カスタム"),
     "cut": MessageLookupByLibrary.simpleMessage("切り取り"),
     "dark": MessageLookupByLibrary.simpleMessage("ダーク"),

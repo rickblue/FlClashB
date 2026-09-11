@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/providers/app.dart';
+import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
@@ -48,6 +49,8 @@ class _EditorPageState extends ConsumerState<EditorPage> {
   late CodeFindController _findController;
   late TextEditingController _titleController;
   late FocusNode _focusNode;
+  late CodeScrollController _scrollController;
+  late _CurrentLineHighlightStyle _currentLineHighlightStyle;
   late bool readOnly = false;
   late final SelectionToolbarController _toolbarController;
 
@@ -57,16 +60,31 @@ class _EditorPageState extends ConsumerState<EditorPage> {
     readOnly = widget.onSave == null;
     _toolbarController = ContextMenuControllerImpl(readOnly);
     _focusNode = FocusNode();
-    _controller = CodeLineEditingController.fromText(widget.content);
+    _scrollController = CodeScrollController();
+    _currentLineHighlightStyle = const _CurrentLineHighlightStyle(
+      foreground: Color(0xFF000000),
+      background: Colors.transparent,
+    );
+    _controller = CodeLineEditingController(
+      codeLines: CodeLines.fromText(widget.content ?? ''),
+      spanBuilder: _buildCurrentLineTextSpan,
+    );
     _findController = CodeFindController(_controller);
     _titleController = TextEditingController(text: widget.title);
-    if (system.isDesktop) {
-      return;
-    }
-    _focusNode.onKeyEvent = ((_, event) {
-      final keys = HardwareKeyboard.instance.logicalKeysPressed;
+    _focusNode.onKeyEvent = (_, event) {
+      if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+        return KeyEventResult.ignored;
+      }
       final key = event.logicalKey;
-      if (!keys.contains(key)) {
+      if (key == LogicalKeyboardKey.pageUp) {
+        _scrollPage(forward: false);
+        return KeyEventResult.handled;
+      }
+      if (key == LogicalKeyboardKey.pageDown) {
+        _scrollPage(forward: true);
+        return KeyEventResult.handled;
+      }
+      if (system.isDesktop) {
         return KeyEventResult.ignored;
       }
       if (key == LogicalKeyboardKey.arrowUp) {
@@ -84,7 +102,7 @@ class _EditorPageState extends ConsumerState<EditorPage> {
         return KeyEventResult.handled;
       }
       return KeyEventResult.ignored;
-    });
+    };
   }
 
   @override
@@ -106,7 +124,72 @@ class _EditorPageState extends ConsumerState<EditorPage> {
     _controller.dispose();
     _titleController.dispose();
     _focusNode.dispose();
+    _scrollController
+      ..verticalScroller.dispose()
+      ..horizontalScroller.dispose()
+      ..dispose();
     super.dispose();
+  }
+
+  TextSpan _buildCurrentLineTextSpan({
+    required BuildContext context,
+    required int index,
+    required CodeLine codeLine,
+    required TextSpan textSpan,
+    required TextStyle style,
+  }) {
+    if (index != _controller.selection.extentIndex) {
+      return textSpan;
+    }
+    return _withCurrentLineHighlight(textSpan, style);
+  }
+
+  TextSpan _withCurrentLineHighlight(TextSpan textSpan, TextStyle style) {
+    final highlight = _currentLineHighlightStyle;
+    return TextSpan(
+      text: textSpan.text,
+      style: (textSpan.style ?? style).copyWith(
+        color: highlight.foreground,
+        backgroundColor: highlight.background,
+      ),
+      children: textSpan.children
+          ?.map<InlineSpan>(
+            (child) => child is TextSpan
+                ? _withCurrentLineHighlight(child, style)
+                : child,
+          )
+          .toList(growable: false),
+    );
+  }
+
+  void _scrollPage({required bool forward}) {
+    final controller = _scrollController.verticalScroller;
+    if (!controller.hasClients) {
+      return;
+    }
+    final position = controller.position;
+    final target =
+        (position.pixels +
+                (forward
+                    ? position.viewportDimension
+                    : -position.viewportDimension))
+            .clamp(position.minScrollExtent, position.maxScrollExtent)
+            .toDouble();
+    if (target != position.pixels) {
+      controller.jumpTo(target);
+    }
+  }
+
+  void _updateCurrentLineHighlightStyle(_CurrentLineHighlightStyle value) {
+    if (_currentLineHighlightStyle == value) {
+      return;
+    }
+    _currentLineHighlightStyle = value;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _controller.forceRepaint();
+      }
+    });
   }
 
   void _handleSearch() {
@@ -176,6 +259,23 @@ class _EditorPageState extends ConsumerState<EditorPage> {
 
   @override
   Widget build(BuildContext context) {
+    final editorColors = ref.watch(
+      themeSettingProvider.select(
+        (state) => (
+          foreground: state.editorCurrentLineForegroundColor,
+          background: state.editorCurrentLineBackgroundColor,
+        ),
+      ),
+    );
+    final currentLineHighlightStyle = _CurrentLineHighlightStyle(
+      foreground: editorColors.foreground == null
+          ? context.colorScheme.onSurface
+          : Color(editorColors.foreground!),
+      background: editorColors.background == null
+          ? context.colorScheme.primary.withValues(alpha: 0.18)
+          : Color(editorColors.background!),
+    );
+    _updateCurrentLineHighlightStyle(currentLineHighlightStyle);
     return CommonPopScope(
       onPop: _handlePop,
       child: CommonScaffold(
@@ -208,8 +308,10 @@ class _EditorPageState extends ConsumerState<EditorPage> {
           findController: _findController,
           toolbarController: _toolbarController,
           focusNode: _focusNode,
+          scrollController: _scrollController,
           readOnly: readOnly,
           languages: widget.languages,
+          currentLineHighlightStyle: currentLineHighlightStyle,
           isLoading: widget.content == null,
         ),
       ),
@@ -295,6 +397,37 @@ class _EditorMenuAction extends ConsumerWidget {
   final VoidCallback onImportFromUrl;
   final VoidCallback onImportFromFile;
 
+  Future<void> _selectCurrentLineColor(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool foreground,
+  }) async {
+    final theme = ref.read(themeSettingProvider);
+    final current = foreground
+        ? theme.editorCurrentLineForegroundColor
+        : theme.editorCurrentLineBackgroundColor;
+    final defaultColor = foreground
+        ? context.colorScheme.onSurface
+        : context.colorScheme.primary.withValues(alpha: 0.18);
+    final result = await dialogs.showCommonDialog<_EditorColorSelection>(
+      context: context,
+      child: _EditorColorDialog(
+        title: foreground
+            ? context.appLocalizations.currentLineForeground
+            : context.appLocalizations.currentLineBackground,
+        initialColor: current == null ? defaultColor : Color(current),
+      ),
+    );
+    if (result == null) {
+      return;
+    }
+    ref.read(themeSettingProvider.notifier).update((state) {
+      return foreground
+          ? state.copyWith(editorCurrentLineForegroundColor: result.value)
+          : state.copyWith(editorCurrentLineBackgroundColor: result.value);
+    });
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final appLocalizations = context.appLocalizations;
@@ -329,6 +462,24 @@ class _EditorMenuAction extends ConsumerWidget {
                 label: appLocalizations.redo,
                 onPressed: controller.canRedo ? controller.redo : null,
               ),
+              CommonPopupMenuItem(
+                icon: Icons.format_color_text,
+                label: appLocalizations.currentLineForeground,
+                onPressed: () async {
+                  await _selectCurrentLineColor(context, ref, foreground: true);
+                },
+              ),
+              CommonPopupMenuItem(
+                icon: Icons.format_color_fill,
+                label: appLocalizations.currentLineBackground,
+                onPressed: () async {
+                  await _selectCurrentLineColor(
+                    context,
+                    ref,
+                    foreground: false,
+                  );
+                },
+              ),
               if (supportRemoteDownload && !readOnly)
                 CommonPopupMenuItem(
                   icon: Icons.arrow_downward,
@@ -352,14 +503,79 @@ class _EditorMenuAction extends ConsumerWidget {
   }
 }
 
+class _EditorColorSelection {
+  const _EditorColorSelection(this.value);
+
+  final int? value;
+}
+
+class _EditorColorDialog extends StatefulWidget {
+  const _EditorColorDialog({required this.title, required this.initialColor});
+
+  final String title;
+  final Color initialColor;
+
+  @override
+  State<_EditorColorDialog> createState() => _EditorColorDialogState();
+}
+
+class _EditorColorDialogState extends State<_EditorColorDialog> {
+  late final ValueNotifier<Color> _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = ValueNotifier(widget.initialColor);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final appLocalizations = context.appLocalizations;
+    return CommonDialog(
+      title: widget.title,
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: Text(appLocalizations.cancel),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop(const _EditorColorSelection(null));
+          },
+          child: Text(appLocalizations.reset),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.of(
+              context,
+            ).pop(_EditorColorSelection(_controller.value.toARGB32()));
+          },
+          child: Text(appLocalizations.confirm),
+        ),
+      ],
+      child: SizedBox(width: 300, child: Palette(controller: _controller)),
+    );
+  }
+}
+
 class _EditorBody extends ConsumerWidget {
   const _EditorBody({
     required this.controller,
     required this.findController,
     required this.toolbarController,
     required this.focusNode,
+    required this.scrollController,
     required this.readOnly,
     required this.languages,
+    required this.currentLineHighlightStyle,
     required this.isLoading,
   });
 
@@ -367,8 +583,10 @@ class _EditorBody extends ConsumerWidget {
   final CodeFindController findController;
   final SelectionToolbarController toolbarController;
   final FocusNode focusNode;
+  final CodeScrollController scrollController;
   final bool readOnly;
   final List<Language> languages;
+  final _CurrentLineHighlightStyle currentLineHighlightStyle;
   final bool isLoading;
 
   CodeHighlightTheme get _highlightTheme {
@@ -403,6 +621,7 @@ class _EditorBody extends ConsumerWidget {
           padding: const EdgeInsets.only(right: 16),
           autocompleteSymbols: true,
           focusNode: focusNode,
+          scrollController: scrollController,
           scrollbarBuilder: (context, child, details) {
             return CommonScrollBar(
               controller: details.controller,
@@ -420,10 +639,14 @@ class _EditorBody extends ConsumerWidget {
               },
           shortcutsActivatorsBuilder:
               const DefaultCodeShortcutsActivatorsBuilder(),
+          chunkAnalyzer: languages.contains(Language.yaml)
+              ? const YamlCodeChunkAnalyzer()
+              : const DefaultCodeChunkAnalyzer(),
           controller: controller,
           style: CodeEditorStyle(
             fontSize: context.textTheme.bodyLarge?.fontSize?.ap,
             fontFamily: FontFamily.jetBrainsMono.value,
+            cursorLineColor: currentLineHighlightStyle.background,
             codeTheme: _highlightTheme,
           ),
         ),
@@ -442,6 +665,88 @@ class _EditorBody extends ConsumerWidget {
       ],
     );
   }
+}
+
+class _CurrentLineHighlightStyle {
+  const _CurrentLineHighlightStyle({
+    required this.foreground,
+    required this.background,
+  });
+
+  final Color foreground;
+  final Color background;
+
+  @override
+  bool operator ==(Object other) {
+    return other is _CurrentLineHighlightStyle &&
+        other.foreground == foreground &&
+        other.background == background;
+  }
+
+  @override
+  int get hashCode => Object.hash(foreground, background);
+}
+
+class YamlCodeChunkAnalyzer implements CodeChunkAnalyzer {
+  const YamlCodeChunkAnalyzer();
+
+  @override
+  List<CodeChunk> run(CodeLines codeLines) {
+    final chunks = <CodeChunk>[];
+    final openChunks = <_YamlChunkStart>[];
+    for (var index = 0; index < codeLines.length; index++) {
+      final trimmed = codeLines[index].text.trim();
+      if (trimmed.isEmpty || trimmed.startsWith('#')) {
+        continue;
+      }
+      if (trimmed == '---' || trimmed == '...') {
+        _closeOpenChunks(openChunks, chunks, index);
+        continue;
+      }
+      final indent =
+          codeLines[index].text.length -
+          codeLines[index].text.trimLeft().length;
+      while (openChunks.isNotEmpty && indent <= openChunks.last.indent) {
+        _closeLastChunk(openChunks, chunks, index);
+      }
+      if (openChunks.isNotEmpty) {
+        openChunks.last.hasChildren = true;
+      }
+      openChunks.add(_YamlChunkStart(index: index, indent: indent));
+    }
+    _closeOpenChunks(openChunks, chunks, codeLines.length);
+    chunks.sort((a, b) => a.index.compareTo(b.index));
+    return chunks;
+  }
+
+  void _closeOpenChunks(
+    List<_YamlChunkStart> openChunks,
+    List<CodeChunk> chunks,
+    int end,
+  ) {
+    while (openChunks.isNotEmpty) {
+      _closeLastChunk(openChunks, chunks, end);
+    }
+  }
+
+  void _closeLastChunk(
+    List<_YamlChunkStart> openChunks,
+    List<CodeChunk> chunks,
+    int end,
+  ) {
+    final chunk = openChunks.removeLast();
+    if (chunk.hasChildren && end - chunk.index > 1) {
+      chunks.add(CodeChunk(chunk.index, end));
+    }
+  }
+}
+
+class _YamlChunkStart {
+  _YamlChunkStart({required this.index, required this.indent});
+
+  final int index;
+  final int indent;
+  bool hasChildren = false;
 }
 
 class _EditorGutter extends StatelessWidget {

@@ -1,4 +1,4 @@
-name: Build macOS DMG
+name: Build macOS Apple Silicon DMG
 
 on:
   workflow_dispatch:
@@ -13,16 +13,8 @@ permissions:
 
 jobs:
   build:
-    name: macOS ${{ matrix.arch }} DMG
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: amd64
-            os: macos-15-intel
-          - arch: arm64
-            os: macos-latest
-    runs-on: ${{ matrix.os }}
+    name: macOS arm64 DMG
+    runs-on: macos-latest
 
     steps:
       - name: Checkout
@@ -61,7 +53,7 @@ jobs:
       - name: Upload DMG
         uses: actions/upload-artifact@v4
         with:
-          name: FlClash-${{ steps.version.outputs.value }}-macos-${{ matrix.arch }}
-          path: dist/*macos-${{ matrix.arch }}.dmg
+          name: FlClash-${{ steps.version.outputs.value }}-macos-arm64
+          path: dist/*macos-arm64.dmg
           if-no-files-found: error
           retention-days: 14

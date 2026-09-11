@@ -367,6 +367,8 @@
   "nullTip": "Пока нет: {label}",
   "script": "Скрипт",
   "color": "Цвет",
+  "currentLineForeground": "Цвет текста текущей строки",
+  "currentLineBackground": "Цвет фона текущей строки",
   "unnamed": "Без названия",
   "pleaseEnterScriptName": "Введите название скрипта",
   "mixedPort": "Смешанный порт",

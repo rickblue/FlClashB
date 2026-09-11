@@ -367,6 +367,8 @@
   "nullTip": "暂无{label}",
   "script": "脚本",
   "color": "颜色",
+  "currentLineForeground": "当前行前景色",
+  "currentLineBackground": "当前行背景色",
   "unnamed": "未命名",
   "pleaseEnterScriptName": "请输入脚本名称",
   "mixedPort": "混合端口",

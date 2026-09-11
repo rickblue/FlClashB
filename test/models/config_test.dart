@@ -330,12 +330,16 @@ void main() {
         themeMode: ThemeMode.light,
         pureBlack: true,
         textScale: TextScale(enable: true, scale: 1.5),
+        editorCurrentLineForegroundColor: 0xFF112233,
+        editorCurrentLineBackgroundColor: 0x80123456,
       );
       final restored = roundTrip(() => props.toJson(), ThemeProps.fromJson);
       expect(restored.primaryColor, 0xFF123456);
       expect(restored.themeMode, ThemeMode.light);
       expect(restored.pureBlack, true);
       expect(restored.textScale.scale, 1.5);
+      expect(restored.editorCurrentLineForegroundColor, 0xFF112233);
+      expect(restored.editorCurrentLineBackgroundColor, 0x80123456);
     });
   });
 

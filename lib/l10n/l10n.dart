@@ -2875,6 +2875,26 @@ class AppLocalizations {
     return Intl.message('Color', name: 'color', desc: '', args: []);
   }
 
+  /// `Current line foreground`
+  String get currentLineForeground {
+    return Intl.message(
+      'Current line foreground',
+      name: 'currentLineForeground',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Current line background`
+  String get currentLineBackground {
+    return Intl.message(
+      'Current line background',
+      name: 'currentLineBackground',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Unnamed`
   String get unnamed {
     return Intl.message('Unnamed', name: 'unnamed', desc: '', args: []);

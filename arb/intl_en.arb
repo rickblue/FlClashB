@@ -367,6 +367,8 @@
   "nullTip": "No {label} yet",
   "script": "Script",
   "color": "Color",
+  "currentLineForeground": "Current line foreground",
+  "currentLineBackground": "Current line background",
   "unnamed": "Unnamed",
   "pleaseEnterScriptName": "Please enter a script name",
   "mixedPort": "Mixed port",

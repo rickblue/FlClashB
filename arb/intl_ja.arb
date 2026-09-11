@@ -367,6 +367,8 @@
   "nullTip": "{label}はまだありません",
   "script": "スクリプト",
   "color": "カラー",
+  "currentLineForeground": "現在行の前景色",
+  "currentLineBackground": "現在行の背景色",
   "unnamed": "名称未設定",
   "pleaseEnterScriptName": "スクリプト名を入力してください",
   "mixedPort": "Mixedポート",
