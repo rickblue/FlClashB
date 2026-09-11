@@ -39,7 +39,7 @@ Future<void> main() async {
   await _writeIco(logo, File(windowsAppIconOutput), sizes: icoSizes);
   for (var status = 0; status < statusIconNames.length; status++) {
     final name = statusIconNames[status];
-    final statusLogo = _applyTrayState(logo, status);
+    final statusLogo = _buildTrayLogo(status);
     await _writeTrayVariants(statusLogo, name);
     await _writeIco(
       statusLogo,
@@ -111,14 +111,65 @@ _Bounds _contentBounds(image.Image source, int left, int right) {
   return _Bounds(left: left, top: top, right: right, bottom: bottom);
 }
 
-image.Image _applyTrayState(image.Image logo, int status) {
-  final result = logo.clone();
-  return switch (status) {
-    0 => image.adjustColor(result, saturation: 0, brightness: 0.72),
-    1 => result,
-    2 => image.adjustColor(result, hue: 150, saturation: 1.2),
+image.Image _buildTrayLogo(int status) {
+  final stateColor = switch (status) {
+    0 => image.ColorRgba8(142, 142, 147, 255),
+    1 => image.ColorRgba8(255, 0, 23, 255),
+    2 => image.ColorRgba8(0, 200, 103, 255),
     _ => throw ArgumentError.value(status, 'status'),
   };
+  final canvas = image.Image(width: 256, height: 256, numChannels: 4)
+    ..clear(image.ColorRgba8(0, 0, 0, 0));
+  final black = image.ColorRgba8(8, 8, 10, 255);
+  final white = image.ColorRgba8(255, 255, 255, 255);
+  final transparent = image.ColorRgba8(0, 0, 0, 0);
+  image.fillCircle(canvas, x: 128, y: 128, radius: 121, color: black);
+  image.fillCircle(canvas, x: 128, y: 128, radius: 113, color: stateColor);
+  image.fillCircle(
+    canvas,
+    x: 128,
+    y: 128,
+    radius: 94,
+    color: transparent,
+    blend: image.BlendMode.direct,
+  );
+  image.drawLine(
+    canvas,
+    x1: 57,
+    y1: 65,
+    x2: 128,
+    y2: 191,
+    color: black,
+    thickness: 57,
+  );
+  image.drawLine(
+    canvas,
+    x1: 128,
+    y1: 191,
+    x2: 199,
+    y2: 65,
+    color: black,
+    thickness: 57,
+  );
+  image.drawLine(
+    canvas,
+    x1: 57,
+    y1: 65,
+    x2: 128,
+    y2: 191,
+    color: white,
+    thickness: 29,
+  );
+  image.drawLine(
+    canvas,
+    x1: 128,
+    y1: 191,
+    x2: 199,
+    y2: 65,
+    color: white,
+    thickness: 29,
+  );
+  return canvas;
 }
 
 image.Image _render(image.Image source, int size) {
