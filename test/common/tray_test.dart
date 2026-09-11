@@ -7,16 +7,49 @@ void main() {
     final macOS = AppTray.forPlatform(isMacOS: true, isWindows: false);
     final linux = AppTray.forPlatform(isMacOS: false, isWindows: false);
 
-    test('windows loads the robotech icon as ICO', () {
-      expect(windows.getTrayIcon(), 'res/robotech.ico');
+    test('windows loads state-specific ICO files', () {
+      expect(
+        windows.getTrayIcon(isStart: false, tunEnable: false),
+        'assets/images/tray/windows/status_1.ico',
+      );
+      expect(
+        windows.getTrayIcon(isStart: true, tunEnable: false),
+        'assets/images/tray/windows/status_2.ico',
+      );
+      expect(
+        windows.getTrayIcon(isStart: true, tunEnable: true),
+        'assets/images/tray/windows/status_3.ico',
+      );
     });
 
-    test('linux loads the colored robotech image', () {
-      expect(linux.getTrayIcon(), 'res/robotech.jpg');
+    test('linux loads state-specific PNG files', () {
+      expect(
+        linux.getTrayIcon(isStart: false, tunEnable: false),
+        'assets/images/tray/unix/status_1.png',
+      );
+      expect(
+        linux.getTrayIcon(isStart: true, tunEnable: false),
+        'assets/images/tray/unix/status_2.png',
+      );
+      expect(
+        linux.getTrayIcon(isStart: true, tunEnable: true),
+        'assets/images/tray/unix/status_3.png',
+      );
     });
 
-    test('macOS loads the colored robotech image', () {
-      expect(macOS.getTrayIcon(), 'res/robotech.jpg');
+    test('macOS loads colored state-specific PNG files', () {
+      expect(
+        macOS.getTrayIcon(isStart: false, tunEnable: false),
+        'assets/images/tray/unix/status_1.png',
+      );
+      expect(
+        macOS.getTrayIcon(isStart: true, tunEnable: false),
+        'assets/images/tray/unix/status_2.png',
+      );
+      expect(
+        macOS.getTrayIcon(isStart: true, tunEnable: true),
+        'assets/images/tray/unix/status_3.png',
+      );
     });
   });
 }

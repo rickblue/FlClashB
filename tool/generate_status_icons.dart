@@ -1,135 +1,181 @@
 import 'dart:io';
-import 'dart:typed_data';
+
+import 'package:image/image.dart' as image;
 
 import 'src/icons/ico.dart';
 
-const sourceDir = 'assets_source/images/icon';
+const spriteSource = 'assets_source/images/icon/vico.png';
+const appIconOutput = 'assets/images/icon.png';
+const windowsAppIconOutput = 'windows/runner/resources/app_icon.ico';
+const macOSAppIconDir = 'macos/Runner/Assets.xcassets/AppIcon.appiconset';
 const pngOutputDir = 'assets/images/tray/unix';
 const icoOutputDir = 'assets/images/tray/windows';
 const statusIconNames = ['status_1', 'status_2', 'status_3'];
 const trayBaseSize = 18;
 const trayScales = [1, 2, 3, 4];
-const appIconSource = 'assets/images/icon.png';
-const appIconOutput = 'windows/runner/resources/app_icon.ico';
+const macOSAppIconSizes = [16, 32, 64, 128, 256, 512, 1024];
 
 Future<void> main() async {
-  final rsvgConvert = await _findExecutable('rsvg-convert');
-  if (rsvgConvert == null) {
-    stderr.writeln(
-      'rsvg-convert is required. Install librsvg before generating icons.',
-    );
+  final source = File(spriteSource);
+  if (!source.existsSync()) {
+    stderr.writeln('Missing icon sprite: ${source.path}');
     exitCode = 1;
     return;
   }
-
-  await Directory(icoOutputDir).create(recursive: true);
-  final tempDir = await Directory.systemTemp.createTemp('status_icons_');
-  final renderer = _Renderer(rsvgConvert, tempDir);
-  try {
-    for (final name in statusIconNames) {
-      final source = File('$sourceDir/$name.svg');
-      if (!source.existsSync()) {
-        stderr.writeln('Missing source SVG: ${source.path}');
-        exitCode = 1;
-        return;
-      }
-      await _writeTrayVariants(renderer, source, name);
-      await _writeIco(
-        renderer,
-        source,
-        File('$icoOutputDir/$name.ico'),
-        sizes: trayIcoSizes,
-      );
-    }
-    final appIcon = await renderer.wrapRaster(File(appIconSource));
-    await _writeIco(renderer, appIcon, File(appIconOutput));
-  } finally {
-    if (tempDir.existsSync()) {
-      await tempDir.delete(recursive: true);
-    }
+  final sprite = image.decodePng(await source.readAsBytes());
+  if (sprite == null) {
+    stderr.writeln('Unable to decode icon sprite: ${source.path}');
+    exitCode = 1;
+    return;
+  }
+  final logo = _extractLargestLogo(sprite);
+  await _writePng(File(appIconOutput), _render(logo, 1024));
+  for (final size in macOSAppIconSizes) {
+    await _writePng(
+      File('$macOSAppIconDir/app_icon_$size.png'),
+      _render(logo, size),
+    );
+  }
+  await _writeIco(logo, File(windowsAppIconOutput), sizes: icoSizes);
+  for (var status = 0; status < statusIconNames.length; status++) {
+    final name = statusIconNames[status];
+    final statusLogo = _applyTrayState(logo, status);
+    await _writeTrayVariants(statusLogo, name);
+    await _writeIco(
+      statusLogo,
+      File('$icoOutputDir/$name.ico'),
+      sizes: trayIcoSizes,
+    );
   }
 }
 
-Future<void> _writeTrayVariants(
-  _Renderer renderer,
-  File source,
-  String name,
-) async {
+image.Image _extractLargestLogo(image.Image sprite) {
+  final bounds = <_Bounds>[];
+  var start = -1;
+  for (var x = 0; x <= sprite.width; x++) {
+    final occupied = x < sprite.width && _columnHasContent(sprite, x);
+    if (occupied && start == -1) {
+      start = x;
+    } else if (!occupied && start != -1) {
+      bounds.add(_contentBounds(sprite, start, x - 1));
+      start = -1;
+    }
+  }
+  bounds.removeWhere((value) => value.width < 16 || value.height < 16);
+  if (bounds.isEmpty) {
+    throw StateError('No non-transparent icon found in $spriteSource');
+  }
+  bounds.sort((a, b) => b.area.compareTo(a.area));
+  final largest = bounds.first;
+  final crop = image.copyCrop(
+    sprite,
+    x: largest.left,
+    y: largest.top,
+    width: largest.width,
+    height: largest.height,
+  );
+  final contentSide = crop.width > crop.height ? crop.width : crop.height;
+  final padding = (contentSide * 0.06).round();
+  final side = contentSide + padding * 2;
+  final canvas = image.Image(width: side, height: side, numChannels: 4)
+    ..clear(image.ColorRgba8(0, 0, 0, 0));
+  image.compositeImage(canvas, crop, center: true);
+  return canvas;
+}
+
+bool _columnHasContent(image.Image source, int x) {
+  for (var y = 0; y < source.height; y++) {
+    if (source.getPixel(x, y).aNormalized > 0.02) {
+      return true;
+    }
+  }
+  return false;
+}
+
+_Bounds _contentBounds(image.Image source, int left, int right) {
+  var top = source.height;
+  var bottom = 0;
+  for (var x = left; x <= right; x++) {
+    for (var y = 0; y < source.height; y++) {
+      if (source.getPixel(x, y).aNormalized <= 0.02) {
+        continue;
+      }
+      if (y < top) {
+        top = y;
+      }
+      if (y > bottom) {
+        bottom = y;
+      }
+    }
+  }
+  return _Bounds(left: left, top: top, right: right, bottom: bottom);
+}
+
+image.Image _applyTrayState(image.Image logo, int status) {
+  final result = logo.clone();
+  return switch (status) {
+    0 => image.adjustColor(result, saturation: 0, brightness: 0.72),
+    1 => result,
+    2 => image.adjustColor(result, hue: 150, saturation: 1.2),
+    _ => throw ArgumentError.value(status, 'status'),
+  };
+}
+
+image.Image _render(image.Image source, int size) {
+  return image.copyResize(
+    source,
+    width: size,
+    height: size,
+    interpolation: image.Interpolation.cubic,
+  );
+}
+
+Future<void> _writeTrayVariants(image.Image source, String name) async {
   for (final scale in trayScales) {
     final directory = scale == 1 ? pngOutputDir : '$pngOutputDir/$scale.0x';
-    await Directory(directory).create(recursive: true);
-    final output = File('$directory/$name.png');
-    await output.writeAsBytes(
-      await renderer.render(source, trayBaseSize * scale),
+    await _writePng(
+      File('$directory/$name.png'),
+      _render(source, trayBaseSize * scale),
     );
-    stdout.writeln('Generated ${output.path}');
   }
 }
 
 Future<void> _writeIco(
-  _Renderer renderer,
-  File source,
+  image.Image source,
   File output, {
-  List<int> sizes = icoSizes,
+  required List<int> sizes,
 }) async {
   final entries = [
     for (final size in sizes)
-      IcoEntry(size: size, png: await renderer.render(source, size)),
+      IcoEntry(size: size, png: image.encodePng(_render(source, size))),
   ];
   await output.parent.create(recursive: true);
   await output.writeAsBytes(buildIco(entries));
   stdout.writeln('Generated ${output.path}');
 }
 
-Future<String?> _findExecutable(String executable) async {
-  final result = await Process.run('which', [executable]);
-  if (result.exitCode != 0) {
-    return null;
-  }
-  return (result.stdout as String).trim();
+Future<void> _writePng(File output, image.Image value) async {
+  await output.parent.create(recursive: true);
+  await output.writeAsBytes(image.encodePng(value));
+  stdout.writeln('Generated ${output.path}');
 }
 
-class _Renderer {
-  _Renderer(this.rsvgConvert, this.tempDir);
+final class _Bounds {
+  const _Bounds({
+    required this.left,
+    required this.top,
+    required this.right,
+    required this.bottom,
+  });
 
-  final String rsvgConvert;
-  final Directory tempDir;
-  int _sequence = 0;
+  final int left;
+  final int top;
+  final int right;
+  final int bottom;
 
-  Future<Uint8List> render(File source, int size) async {
-    final output = File('${tempDir.path}/${_sequence++}-$size.png');
-    final result = await Process.run(rsvgConvert, [
-      '-w',
-      '$size',
-      '-h',
-      '$size',
-      '-o',
-      output.path,
-      source.path,
-    ]);
-    if (result.exitCode != 0) {
-      stderr
-        ..writeln('Failed to render ${source.path} at ${size}px')
-        ..writeln(result.stderr);
-      exit(result.exitCode);
-    }
-    return output.readAsBytes();
-  }
+  int get width => right - left + 1;
 
-  // librsvg only follows image references inside the SVG's own directory, so
-  // the raster is copied next to its wrapper before rendering.
-  Future<File> wrapRaster(File raster) async {
-    final copy = await raster.copy('${tempDir.path}/${_basename(raster)}');
-    final wrapper = File('${tempDir.path}/${_basename(raster)}.svg');
-    await wrapper.writeAsString(
-      '<svg xmlns="http://www.w3.org/2000/svg" '
-      'xmlns:xlink="http://www.w3.org/1999/xlink" '
-      'width="256" height="256" viewBox="0 0 256 256">'
-      '<image xlink:href="${_basename(copy)}" width="256" height="256"/>'
-      '</svg>',
-    );
-    return wrapper;
-  }
+  int get height => bottom - top + 1;
 
-  String _basename(File file) => file.uri.pathSegments.last;
+  int get area => width * height;
 }

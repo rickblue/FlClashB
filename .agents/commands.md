@@ -90,18 +90,18 @@ Generated output paths, configured in `build.yaml`:
 - `lib/providers/generated/*.g.dart`.
 - `lib/database/generated/*.g.dart`.
 
-Tray and Windows app icons are generated, not hand-edited. `assets_source/images/icon/*.svg` is
-the source of truth; the script needs `rsvg-convert` (librsvg) on `PATH`:
+Tray and desktop app icons are generated, not hand-edited. `assets_source/images/icon/vico.png` is
+the source of truth:
 
 ```bash
 dart run tool/generate_status_icons.dart
 ```
 
-It writes the tray PNGs with Flutter `2.0x/`–`4.0x/` resolution variants to `assets/images/tray/unix/`,
-multi-size tray `.ico` files to `assets/images/tray/windows/`, and `windows/runner/resources/app_icon.ico`
-from `assets/images/icon.png`. `pubspec.yaml` declares the two tray directories with `platforms:` so each
-build only bundles the format its tray loads; a new status icon needs a source SVG and an entry in the
-script's `statusIconNames`, nothing in `pubspec.yaml`.
+It extracts the largest logo from the source sprite and writes `assets/images/icon.png`, the macOS AppIcon
+set, and `windows/runner/resources/app_icon.ico`. It also creates stopped, running, and TUN tray states as
+Flutter `2.0x`–`4.0x` PNG variants under `assets/images/tray/unix/` and multi-size ICO files under
+`assets/images/tray/windows/`. `pubspec.yaml` declares the two tray directories with `platforms:` so each
+build only bundles the format its tray loads.
 
 ## Testing
 
