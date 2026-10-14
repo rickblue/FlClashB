@@ -131,18 +131,23 @@ class Bootstrap {
           WidgetsBinding.instance.platformDispatcher.locale,
     );
     await window?.init(version, config.windowProps);
-    final fontFamily = config.themeProps.fontFamily;
-    if (fontFamily != null &&
-        fontFamily != 'JetBrainsMono' &&
-        system.isDesktop) {
-      try {
-        await SystemFonts().loadFont(fontFamily);
-      } catch (_) {}
-    }
+    await loadCustomThemeFont(config.themeProps.fontFamily);
     if (system.isAndroid) {
       await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     }
     return container;
+  }
+
+  @visibleForTesting
+  Future<void> loadCustomThemeFont(String? fontFamily) async {
+    if (fontFamily == null ||
+        fontFamily == 'JetBrainsMono' ||
+        !system.isDesktop) {
+      return;
+    }
+    try {
+      await SystemFonts().loadFont(fontFamily);
+    } catch (_) {}
   }
 
   Future<void> attach() async {
