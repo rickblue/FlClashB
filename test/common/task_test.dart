@@ -490,6 +490,36 @@ void main() {
     expect(safe['ntp']['enable'], true);
   });
 
+  test('makeRealProfileTask leaves the core no UI to download', () async {
+    final rawConfig = await decodeJSONTask<Map<String, dynamic>>(
+      await encodeJSONTask({
+        'external-ui': 'ui',
+        'external-ui-name': 'metacubexd',
+        'external-ui-url': 'https://example.com/ui.zip',
+      }),
+    );
+    final result = await makeRealProfileTask(
+      MakeRealProfileState(
+        profilesPath: '/profiles',
+        profileId: 15,
+        rawConfig: rawConfig,
+        realPatchConfig: const PatchClashConfig(),
+        overrideDns: false,
+        overrideNtp: false,
+        appendSystemDns: false,
+        proxyGroups: const [],
+        rules: const [],
+        addedRules: const [],
+        defaultUA: 'FlClash-Test',
+      ),
+    );
+    final config = loadYaml(result.yaml) as YamlMap;
+
+    expect(config['external-ui'], '');
+    expect(config['external-ui-name'], '');
+    expect(config['external-ui-url'], '');
+  });
+
   group('makeRealProfileTask interface-name mode', () {
     Future<YamlMap> runWith(PatchClashConfig realPatchConfig) async {
       final rawConfig = await decodeJSONTask<Map<String, dynamic>>(

@@ -191,6 +191,7 @@ Future<({String yaml, String md5})> _makeRealProfileTask(
       rawConfig['interface-name'] = realPatchConfig.interfaceName;
   }
   rawConfig['external-ui-url'] = '';
+  rawConfig['external-ui-name'] = '';
   rawConfig['tcp-concurrent'] = realPatchConfig.tcpConcurrent;
   rawConfig['unified-delay'] = realPatchConfig.unifiedDelay;
   rawConfig['ipv6'] = realPatchConfig.ipv6;
