@@ -2707,7 +2707,7 @@ as double,
 /// @nodoc
 mixin _$ThemeProps {
 
- int? get primaryColor; List<int> get primaryColors; ThemeMode get themeMode; DynamicSchemeVariant get schemeVariant; bool get pureBlack; bool get sidebarBlur; TextScale get textScale;@JsonKey(name: 'systemFontFamily') String? get fontFamily;
+ int? get primaryColor; List<int> get primaryColors; ThemeMode get themeMode;@JsonKey(fromJson: _fontFamilyFromJson) String? get fontFamily; DynamicSchemeVariant get schemeVariant; bool get pureBlack; bool get sidebarBlur; TextScale get textScale; int? get editorCurrentLineForegroundColor; int? get editorCurrentLineBackgroundColor;
 /// Create a copy of ThemeProps
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2721,20 +2721,20 @@ $ThemePropsCopyWith<ThemeProps> get copyWith => _$ThemePropsCopyWithImpl<ThemePr
 @override
 bool operator ==(Object other) {
   final _this = this as ThemeProps;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ThemeProps&&(identical(other.primaryColor, _this.primaryColor) || other.primaryColor == _this.primaryColor)&&const DeepCollectionEquality().equals(other.primaryColors, _this.primaryColors)&&(identical(other.themeMode, _this.themeMode) || other.themeMode == _this.themeMode)&&(identical(other.schemeVariant, _this.schemeVariant) || other.schemeVariant == _this.schemeVariant)&&(identical(other.pureBlack, _this.pureBlack) || other.pureBlack == _this.pureBlack)&&(identical(other.sidebarBlur, _this.sidebarBlur) || other.sidebarBlur == _this.sidebarBlur)&&(identical(other.textScale, _this.textScale) || other.textScale == _this.textScale)&&(identical(other.fontFamily, _this.fontFamily) || other.fontFamily == _this.fontFamily));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ThemeProps&&(identical(other.primaryColor, _this.primaryColor) || other.primaryColor == _this.primaryColor)&&const DeepCollectionEquality().equals(other.primaryColors, _this.primaryColors)&&(identical(other.themeMode, _this.themeMode) || other.themeMode == _this.themeMode)&&(identical(other.fontFamily, _this.fontFamily) || other.fontFamily == _this.fontFamily)&&(identical(other.schemeVariant, _this.schemeVariant) || other.schemeVariant == _this.schemeVariant)&&(identical(other.pureBlack, _this.pureBlack) || other.pureBlack == _this.pureBlack)&&(identical(other.sidebarBlur, _this.sidebarBlur) || other.sidebarBlur == _this.sidebarBlur)&&(identical(other.textScale, _this.textScale) || other.textScale == _this.textScale)&&(identical(other.editorCurrentLineForegroundColor, _this.editorCurrentLineForegroundColor) || other.editorCurrentLineForegroundColor == _this.editorCurrentLineForegroundColor)&&(identical(other.editorCurrentLineBackgroundColor, _this.editorCurrentLineBackgroundColor) || other.editorCurrentLineBackgroundColor == _this.editorCurrentLineBackgroundColor));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as ThemeProps;
-  return Object.hash(runtimeType,_this.primaryColor,const DeepCollectionEquality().hash(_this.primaryColors),_this.themeMode,_this.schemeVariant,_this.pureBlack,_this.sidebarBlur,_this.textScale,_this.fontFamily);
+  return Object.hash(runtimeType,_this.primaryColor,const DeepCollectionEquality().hash(_this.primaryColors),_this.themeMode,_this.fontFamily,_this.schemeVariant,_this.pureBlack,_this.sidebarBlur,_this.textScale,_this.editorCurrentLineForegroundColor,_this.editorCurrentLineBackgroundColor);
 }
 
 @override
 String toString() {
   final _this = this as ThemeProps;
-  return 'ThemeProps(primaryColor: ${_this.primaryColor}, primaryColors: ${_this.primaryColors}, themeMode: ${_this.themeMode}, schemeVariant: ${_this.schemeVariant}, pureBlack: ${_this.pureBlack}, sidebarBlur: ${_this.sidebarBlur}, textScale: ${_this.textScale}, fontFamily: ${_this.fontFamily})';
+  return 'ThemeProps(primaryColor: ${_this.primaryColor}, primaryColors: ${_this.primaryColors}, themeMode: ${_this.themeMode}, fontFamily: ${_this.fontFamily}, schemeVariant: ${_this.schemeVariant}, pureBlack: ${_this.pureBlack}, sidebarBlur: ${_this.sidebarBlur}, textScale: ${_this.textScale}, editorCurrentLineForegroundColor: ${_this.editorCurrentLineForegroundColor}, editorCurrentLineBackgroundColor: ${_this.editorCurrentLineBackgroundColor})';
 }
 
 
@@ -2745,7 +2745,7 @@ abstract mixin class $ThemePropsCopyWith<$Res>  {
   factory $ThemePropsCopyWith(ThemeProps value, $Res Function(ThemeProps) _then) = _$ThemePropsCopyWithImpl;
 @useResult
 $Res call({
- int? primaryColor, List<int> primaryColors, ThemeMode themeMode, DynamicSchemeVariant schemeVariant, bool pureBlack, bool sidebarBlur, TextScale textScale,@JsonKey(name: 'systemFontFamily') String? fontFamily
+ int? primaryColor, List<int> primaryColors, ThemeMode themeMode,@JsonKey(fromJson: _fontFamilyFromJson) String? fontFamily, DynamicSchemeVariant schemeVariant, bool pureBlack, bool sidebarBlur, TextScale textScale, int? editorCurrentLineForegroundColor, int? editorCurrentLineBackgroundColor
 });
 
 
@@ -2762,17 +2762,19 @@ class _$ThemePropsCopyWithImpl<$Res>
 
 /// Create a copy of ThemeProps
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? primaryColor = freezed,Object? primaryColors = null,Object? themeMode = null,Object? schemeVariant = null,Object? pureBlack = null,Object? sidebarBlur = null,Object? textScale = null,Object? fontFamily = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? primaryColor = freezed,Object? primaryColors = null,Object? themeMode = null,Object? fontFamily = freezed,Object? schemeVariant = null,Object? pureBlack = null,Object? sidebarBlur = null,Object? textScale = null,Object? editorCurrentLineForegroundColor = freezed,Object? editorCurrentLineBackgroundColor = freezed,}) {
   return _then(ThemeProps(
 primaryColor: freezed == primaryColor ? _self.primaryColor : primaryColor // ignore: cast_nullable_to_non_nullable
 as int?,primaryColors: null == primaryColors ? _self.primaryColors : primaryColors // ignore: cast_nullable_to_non_nullable
 as List<int>,themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
-as ThemeMode,schemeVariant: null == schemeVariant ? _self.schemeVariant : schemeVariant // ignore: cast_nullable_to_non_nullable
+as ThemeMode,fontFamily: freezed == fontFamily ? _self.fontFamily : fontFamily // ignore: cast_nullable_to_non_nullable
+as String?,schemeVariant: null == schemeVariant ? _self.schemeVariant : schemeVariant // ignore: cast_nullable_to_non_nullable
 as DynamicSchemeVariant,pureBlack: null == pureBlack ? _self.pureBlack : pureBlack // ignore: cast_nullable_to_non_nullable
 as bool,sidebarBlur: null == sidebarBlur ? _self.sidebarBlur : sidebarBlur // ignore: cast_nullable_to_non_nullable
 as bool,textScale: null == textScale ? _self.textScale : textScale // ignore: cast_nullable_to_non_nullable
-as TextScale,fontFamily: freezed == fontFamily ? _self.fontFamily : fontFamily // ignore: cast_nullable_to_non_nullable
-as String?,
+as TextScale,editorCurrentLineForegroundColor: freezed == editorCurrentLineForegroundColor ? _self.editorCurrentLineForegroundColor : editorCurrentLineForegroundColor // ignore: cast_nullable_to_non_nullable
+as int?,editorCurrentLineBackgroundColor: freezed == editorCurrentLineBackgroundColor ? _self.editorCurrentLineBackgroundColor : editorCurrentLineBackgroundColor // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 /// Create a copy of ThemeProps
@@ -2866,10 +2868,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? primaryColor,  List<int> primaryColors,  ThemeMode themeMode,  DynamicSchemeVariant schemeVariant,  bool pureBlack,  bool sidebarBlur,  TextScale textScale, @JsonKey(name: 'systemFontFamily')  String? fontFamily)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? primaryColor,  List<int> primaryColors,  ThemeMode themeMode, @JsonKey(fromJson: _fontFamilyFromJson)  String? fontFamily,  DynamicSchemeVariant schemeVariant,  bool pureBlack,  bool sidebarBlur,  TextScale textScale,  int? editorCurrentLineForegroundColor,  int? editorCurrentLineBackgroundColor)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ThemeProps() when $default != null:
-return $default(_that.primaryColor,_that.primaryColors,_that.themeMode,_that.schemeVariant,_that.pureBlack,_that.sidebarBlur,_that.textScale,_that.fontFamily);case _:
+return $default(_that.primaryColor,_that.primaryColors,_that.themeMode,_that.fontFamily,_that.schemeVariant,_that.pureBlack,_that.sidebarBlur,_that.textScale,_that.editorCurrentLineForegroundColor,_that.editorCurrentLineBackgroundColor);case _:
   return orElse();
 
 }
@@ -2887,10 +2889,10 @@ return $default(_that.primaryColor,_that.primaryColors,_that.themeMode,_that.sch
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? primaryColor,  List<int> primaryColors,  ThemeMode themeMode,  DynamicSchemeVariant schemeVariant,  bool pureBlack,  bool sidebarBlur,  TextScale textScale, @JsonKey(name: 'systemFontFamily')  String? fontFamily)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? primaryColor,  List<int> primaryColors,  ThemeMode themeMode, @JsonKey(fromJson: _fontFamilyFromJson)  String? fontFamily,  DynamicSchemeVariant schemeVariant,  bool pureBlack,  bool sidebarBlur,  TextScale textScale,  int? editorCurrentLineForegroundColor,  int? editorCurrentLineBackgroundColor)  $default,) {final _that = this;
 switch (_that) {
 case _ThemeProps():
-return $default(_that.primaryColor,_that.primaryColors,_that.themeMode,_that.schemeVariant,_that.pureBlack,_that.sidebarBlur,_that.textScale,_that.fontFamily);case _:
+return $default(_that.primaryColor,_that.primaryColors,_that.themeMode,_that.fontFamily,_that.schemeVariant,_that.pureBlack,_that.sidebarBlur,_that.textScale,_that.editorCurrentLineForegroundColor,_that.editorCurrentLineBackgroundColor);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -2907,10 +2909,10 @@ return $default(_that.primaryColor,_that.primaryColors,_that.themeMode,_that.sch
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? primaryColor,  List<int> primaryColors,  ThemeMode themeMode,  DynamicSchemeVariant schemeVariant,  bool pureBlack,  bool sidebarBlur,  TextScale textScale, @JsonKey(name: 'systemFontFamily')  String? fontFamily)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? primaryColor,  List<int> primaryColors,  ThemeMode themeMode, @JsonKey(fromJson: _fontFamilyFromJson)  String? fontFamily,  DynamicSchemeVariant schemeVariant,  bool pureBlack,  bool sidebarBlur,  TextScale textScale,  int? editorCurrentLineForegroundColor,  int? editorCurrentLineBackgroundColor)?  $default,) {final _that = this;
 switch (_that) {
 case _ThemeProps() when $default != null:
-return $default(_that.primaryColor,_that.primaryColors,_that.themeMode,_that.schemeVariant,_that.pureBlack,_that.sidebarBlur,_that.textScale,_that.fontFamily);case _:
+return $default(_that.primaryColor,_that.primaryColors,_that.themeMode,_that.fontFamily,_that.schemeVariant,_that.pureBlack,_that.sidebarBlur,_that.textScale,_that.editorCurrentLineForegroundColor,_that.editorCurrentLineBackgroundColor);case _:
   return null;
 
 }
@@ -2922,7 +2924,7 @@ return $default(_that.primaryColor,_that.primaryColors,_that.themeMode,_that.sch
 @JsonSerializable()
 
 class _ThemeProps implements ThemeProps {
-  const _ThemeProps({this.primaryColor,  List<int> primaryColors = defaultPrimaryColors, this.themeMode = ThemeMode.dark, this.schemeVariant = DynamicSchemeVariant.content, this.pureBlack = false, this.sidebarBlur = true, this.textScale = const TextScale(), @JsonKey(name: 'systemFontFamily') this.fontFamily}): _primaryColors = primaryColors;
+  const _ThemeProps({this.primaryColor,  List<int> primaryColors = defaultPrimaryColors, this.themeMode = ThemeMode.dark, @JsonKey(fromJson: _fontFamilyFromJson) this.fontFamily = null, this.schemeVariant = DynamicSchemeVariant.content, this.pureBlack = false, this.sidebarBlur = true, this.textScale = const TextScale(), this.editorCurrentLineForegroundColor, this.editorCurrentLineBackgroundColor}): _primaryColors = primaryColors;
   factory _ThemeProps.fromJson(Map<String, dynamic> json) => _$ThemePropsFromJson(json);
 
 @override final  int? primaryColor;
@@ -2934,11 +2936,13 @@ class _ThemeProps implements ThemeProps {
 }
 
 @override@JsonKey() final  ThemeMode themeMode;
+@override@JsonKey(fromJson: _fontFamilyFromJson) final  String? fontFamily;
 @override@JsonKey() final  DynamicSchemeVariant schemeVariant;
 @override@JsonKey() final  bool pureBlack;
 @override@JsonKey() final  bool sidebarBlur;
 @override@JsonKey() final  TextScale textScale;
-@override@JsonKey(name: 'systemFontFamily') final  String? fontFamily;
+@override final  int? editorCurrentLineForegroundColor;
+@override final  int? editorCurrentLineBackgroundColor;
 
 /// Create a copy of ThemeProps
 /// with the given fields replaced by the non-null parameter values.
@@ -2953,18 +2957,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ThemeProps&&(identical(other.primaryColor, primaryColor) || other.primaryColor == primaryColor)&&const DeepCollectionEquality().equals(other.primaryColors, _primaryColors)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.schemeVariant, schemeVariant) || other.schemeVariant == schemeVariant)&&(identical(other.pureBlack, pureBlack) || other.pureBlack == pureBlack)&&(identical(other.sidebarBlur, sidebarBlur) || other.sidebarBlur == sidebarBlur)&&(identical(other.textScale, textScale) || other.textScale == textScale)&&(identical(other.fontFamily, fontFamily) || other.fontFamily == fontFamily));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ThemeProps&&(identical(other.primaryColor, primaryColor) || other.primaryColor == primaryColor)&&const DeepCollectionEquality().equals(other.primaryColors, _primaryColors)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.fontFamily, fontFamily) || other.fontFamily == fontFamily)&&(identical(other.schemeVariant, schemeVariant) || other.schemeVariant == schemeVariant)&&(identical(other.pureBlack, pureBlack) || other.pureBlack == pureBlack)&&(identical(other.sidebarBlur, sidebarBlur) || other.sidebarBlur == sidebarBlur)&&(identical(other.textScale, textScale) || other.textScale == textScale)&&(identical(other.editorCurrentLineForegroundColor, editorCurrentLineForegroundColor) || other.editorCurrentLineForegroundColor == editorCurrentLineForegroundColor)&&(identical(other.editorCurrentLineBackgroundColor, editorCurrentLineBackgroundColor) || other.editorCurrentLineBackgroundColor == editorCurrentLineBackgroundColor));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,primaryColor,const DeepCollectionEquality().hash(_primaryColors),themeMode,schemeVariant,pureBlack,sidebarBlur,textScale,fontFamily);
+    return Object.hash(runtimeType,primaryColor,const DeepCollectionEquality().hash(_primaryColors),themeMode,fontFamily,schemeVariant,pureBlack,sidebarBlur,textScale,editorCurrentLineForegroundColor,editorCurrentLineBackgroundColor);
 }
 
 @override
 String toString() {
-    return 'ThemeProps(primaryColor: $primaryColor, primaryColors: $primaryColors, themeMode: $themeMode, schemeVariant: $schemeVariant, pureBlack: $pureBlack, sidebarBlur: $sidebarBlur, textScale: $textScale, fontFamily: $fontFamily)';
+    return 'ThemeProps(primaryColor: $primaryColor, primaryColors: $primaryColors, themeMode: $themeMode, fontFamily: $fontFamily, schemeVariant: $schemeVariant, pureBlack: $pureBlack, sidebarBlur: $sidebarBlur, textScale: $textScale, editorCurrentLineForegroundColor: $editorCurrentLineForegroundColor, editorCurrentLineBackgroundColor: $editorCurrentLineBackgroundColor)';
 }
 
 
@@ -2975,7 +2979,7 @@ abstract mixin class _$ThemePropsCopyWith<$Res> implements $ThemePropsCopyWith<$
   factory _$ThemePropsCopyWith(_ThemeProps value, $Res Function(_ThemeProps) _then) = __$ThemePropsCopyWithImpl;
 @override @useResult
 $Res call({
- int? primaryColor, List<int> primaryColors, ThemeMode themeMode, DynamicSchemeVariant schemeVariant, bool pureBlack, bool sidebarBlur, TextScale textScale,@JsonKey(name: 'systemFontFamily') String? fontFamily
+ int? primaryColor, List<int> primaryColors, ThemeMode themeMode,@JsonKey(fromJson: _fontFamilyFromJson) String? fontFamily, DynamicSchemeVariant schemeVariant, bool pureBlack, bool sidebarBlur, TextScale textScale, int? editorCurrentLineForegroundColor, int? editorCurrentLineBackgroundColor
 });
 
 
@@ -2992,17 +2996,19 @@ class __$ThemePropsCopyWithImpl<$Res>
 
 /// Create a copy of ThemeProps
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? primaryColor = freezed,Object? primaryColors = null,Object? themeMode = null,Object? schemeVariant = null,Object? pureBlack = null,Object? sidebarBlur = null,Object? textScale = null,Object? fontFamily = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? primaryColor = freezed,Object? primaryColors = null,Object? themeMode = null,Object? fontFamily = freezed,Object? schemeVariant = null,Object? pureBlack = null,Object? sidebarBlur = null,Object? textScale = null,Object? editorCurrentLineForegroundColor = freezed,Object? editorCurrentLineBackgroundColor = freezed,}) {
   return _then(_ThemeProps(
 primaryColor: freezed == primaryColor ? _self.primaryColor : primaryColor // ignore: cast_nullable_to_non_nullable
 as int?,primaryColors: null == primaryColors ? _self._primaryColors : primaryColors // ignore: cast_nullable_to_non_nullable
 as List<int>,themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
-as ThemeMode,schemeVariant: null == schemeVariant ? _self.schemeVariant : schemeVariant // ignore: cast_nullable_to_non_nullable
+as ThemeMode,fontFamily: freezed == fontFamily ? _self.fontFamily : fontFamily // ignore: cast_nullable_to_non_nullable
+as String?,schemeVariant: null == schemeVariant ? _self.schemeVariant : schemeVariant // ignore: cast_nullable_to_non_nullable
 as DynamicSchemeVariant,pureBlack: null == pureBlack ? _self.pureBlack : pureBlack // ignore: cast_nullable_to_non_nullable
 as bool,sidebarBlur: null == sidebarBlur ? _self.sidebarBlur : sidebarBlur // ignore: cast_nullable_to_non_nullable
 as bool,textScale: null == textScale ? _self.textScale : textScale // ignore: cast_nullable_to_non_nullable
-as TextScale,fontFamily: freezed == fontFamily ? _self.fontFamily : fontFamily // ignore: cast_nullable_to_non_nullable
-as String?,
+as TextScale,editorCurrentLineForegroundColor: freezed == editorCurrentLineForegroundColor ? _self.editorCurrentLineForegroundColor : editorCurrentLineForegroundColor // ignore: cast_nullable_to_non_nullable
+as int?,editorCurrentLineBackgroundColor: freezed == editorCurrentLineBackgroundColor ? _self.editorCurrentLineBackgroundColor : editorCurrentLineBackgroundColor // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 

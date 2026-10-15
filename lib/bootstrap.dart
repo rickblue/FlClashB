@@ -22,7 +22,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_color_utilities/palettes/tonal_palette.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:system_fonts/system_fonts.dart';
 
 class Bootstrap {
   static Bootstrap? _instance;
@@ -146,23 +145,10 @@ class Bootstrap {
           WidgetsBinding.instance.platformDispatcher.locale,
     );
     await window?.init(version, config.windowProps);
-    await loadCustomThemeFont(config.themeProps.fontFamily);
     if (system.isAndroid) {
       await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     }
     return container;
-  }
-
-  @visibleForTesting
-  Future<void> loadCustomThemeFont(String? fontFamily) async {
-    if (fontFamily == null ||
-        fontFamily == 'JetBrainsMono' ||
-        !system.isDesktop) {
-      return;
-    }
-    try {
-      await SystemFonts().loadFont(fontFamily);
-    } catch (_) {}
   }
 
   Future<void> attach() async {

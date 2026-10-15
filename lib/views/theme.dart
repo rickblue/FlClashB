@@ -26,8 +26,6 @@ class ThemeView extends StatelessWidget {
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
           const _ThemeModeItem(),
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
-          const _FontFamilyItem(),
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
           const _PureBlackItem(),
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
           const _PrimaryColorItem(),

@@ -757,6 +757,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "FlClash の起動中にエラーが発生したため、続行できません。詳細をコピーして問題を報告できます。繰り返し発生する場合は、データを消去すると起動できるようになることがあります。",
     ),
     "initiator": MessageLookupByLibrary.simpleMessage("発信元"),
+    "inputPackageName": MessageLookupByLibrary.simpleMessage("パッケージ名を入力"),
     "inputProxyGroupName": MessageLookupByLibrary.simpleMessage(
       "プロキシグループ名を入力してください",
     ),
@@ -806,6 +807,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidNetworkContent": MessageLookupByLibrary.simpleMessage(
       "tcp または udp のみ対応しています",
     ),
+    "invalidPackageName": MessageLookupByLibrary.simpleMessage("無効なパッケージ名"),
     "invalidPolicy": m33,
     "invalidPortRangeContent": MessageLookupByLibrary.simpleMessage(
       "443 や 8000-9000 のようなポートまたは範囲を入力してください",
@@ -916,6 +918,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "logsTest": MessageLookupByLibrary.simpleMessage("ログテスト"),
     "loopback": MessageLookupByLibrary.simpleMessage("UWP ループバック解除"),
     "loose": MessageLookupByLibrary.simpleMessage("ゆったり"),
+    "manualAddPackage": MessageLookupByLibrary.simpleMessage("パッケージ名を手動追加"),
+    "manualAdded": MessageLookupByLibrary.simpleMessage("手動追加"),
     "matchSourceIp": MessageLookupByLibrary.simpleMessage("送信元IPにマッチ"),
     "matchTarget": MessageLookupByLibrary.simpleMessage("MATCH-TARGET"),
     "maxFailedTimes": MessageLookupByLibrary.simpleMessage("最大失敗回数"),
@@ -1037,6 +1041,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "宛先を上書きすると、元のアドレスではなく検出したドメインに接続します。",
     ),
     "overrideEntries": MessageLookupByLibrary.simpleMessage("上書き項目"),
+    "packageAlreadyExists": MessageLookupByLibrary.simpleMessage(
+      "パッケージは既に存在します",
+    ),
     "palette": MessageLookupByLibrary.simpleMessage("パレット"),
     "parsePureIp": MessageLookupByLibrary.simpleMessage("純粋なIPを解析"),
     "parsePureIpDesc": MessageLookupByLibrary.simpleMessage(

@@ -692,6 +692,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "FlClash 启动时出错，无法继续运行。可以复制错误详情用于反馈；如果问题反复出现，清除数据后通常可以重新启动。",
     ),
     "initiator": MessageLookupByLibrary.simpleMessage("发起方"),
+    "inputPackageName": MessageLookupByLibrary.simpleMessage("输入包名"),
     "inputProxyGroupName": MessageLookupByLibrary.simpleMessage("输入策略组名称"),
     "inputRuleContent": MessageLookupByLibrary.simpleMessage("输入规则内容"),
     "installedAppsPermissionDeniedMessage":
@@ -733,6 +734,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidNetworkContent": MessageLookupByLibrary.simpleMessage(
       "仅支持 tcp 或 udp",
     ),
+    "invalidPackageName": MessageLookupByLibrary.simpleMessage("无效的包名"),
     "invalidPolicy": m33,
     "invalidPortRangeContent": MessageLookupByLibrary.simpleMessage(
       "请输入端口或范围，如 443 或 8000-9000",
@@ -831,6 +833,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "logsTest": MessageLookupByLibrary.simpleMessage("日志测试"),
     "loopback": MessageLookupByLibrary.simpleMessage("UWP 回环解锁"),
     "loose": MessageLookupByLibrary.simpleMessage("宽松"),
+    "manualAddPackage": MessageLookupByLibrary.simpleMessage("手动添加包名"),
+    "manualAdded": MessageLookupByLibrary.simpleMessage("手动添加"),
     "matchSourceIp": MessageLookupByLibrary.simpleMessage("匹配来源IP"),
     "matchTarget": MessageLookupByLibrary.simpleMessage("MATCH-TARGET"),
     "maxFailedTimes": MessageLookupByLibrary.simpleMessage("最大失败次数"),
@@ -940,6 +944,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "覆盖目标地址使用嗅探到的域名替换原目标地址发起连接。",
     ),
     "overrideEntries": MessageLookupByLibrary.simpleMessage("覆写项"),
+    "packageAlreadyExists": MessageLookupByLibrary.simpleMessage("包名已存在"),
     "palette": MessageLookupByLibrary.simpleMessage("调色板"),
     "parsePureIp": MessageLookupByLibrary.simpleMessage("解析纯IP"),
     "parsePureIpDesc": MessageLookupByLibrary.simpleMessage(

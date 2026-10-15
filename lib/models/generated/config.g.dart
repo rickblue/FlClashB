@@ -353,6 +353,9 @@ _ThemeProps _$ThemePropsFromJson(Map<String, dynamic> json) => _ThemeProps(
   themeMode:
       $enumDecodeNullable(_$ThemeModeEnumMap, json['themeMode']) ??
       ThemeMode.dark,
+  fontFamily: json['fontFamily'] == null
+      ? null
+      : _fontFamilyFromJson(json['fontFamily']),
   schemeVariant:
       $enumDecodeNullable(
         _$DynamicSchemeVariantEnumMap,
@@ -364,20 +367,26 @@ _ThemeProps _$ThemePropsFromJson(Map<String, dynamic> json) => _ThemeProps(
   textScale: json['textScale'] == null
       ? const TextScale()
       : TextScale.fromJson(json['textScale'] as Map<String, dynamic>),
-  fontFamily: json['systemFontFamily'] as String?,
+  editorCurrentLineForegroundColor:
+      (json['editorCurrentLineForegroundColor'] as num?)?.toInt(),
+  editorCurrentLineBackgroundColor:
+      (json['editorCurrentLineBackgroundColor'] as num?)?.toInt(),
 );
 
-Map<String, dynamic> _$ThemePropsToJson(_ThemeProps instance) =>
-    <String, dynamic>{
-      'primaryColor': instance.primaryColor,
-      'primaryColors': instance.primaryColors,
-      'themeMode': _$ThemeModeEnumMap[instance.themeMode]!,
-      'schemeVariant': _$DynamicSchemeVariantEnumMap[instance.schemeVariant]!,
-      'pureBlack': instance.pureBlack,
-      'sidebarBlur': instance.sidebarBlur,
-      'textScale': instance.textScale,
-      'systemFontFamily': instance.fontFamily,
-    };
+Map<String, dynamic> _$ThemePropsToJson(
+  _ThemeProps instance,
+) => <String, dynamic>{
+  'primaryColor': instance.primaryColor,
+  'primaryColors': instance.primaryColors,
+  'themeMode': _$ThemeModeEnumMap[instance.themeMode]!,
+  'fontFamily': instance.fontFamily,
+  'schemeVariant': _$DynamicSchemeVariantEnumMap[instance.schemeVariant]!,
+  'pureBlack': instance.pureBlack,
+  'sidebarBlur': instance.sidebarBlur,
+  'textScale': instance.textScale,
+  'editorCurrentLineForegroundColor': instance.editorCurrentLineForegroundColor,
+  'editorCurrentLineBackgroundColor': instance.editorCurrentLineBackgroundColor,
+};
 
 const _$ThemeModeEnumMap = {
   ThemeMode.system: 'system',
