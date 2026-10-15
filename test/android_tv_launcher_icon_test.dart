@@ -56,7 +56,8 @@ void main() {
     );
 
     // The TV foreground wraps the shared brand art: its visible content must
-    // sit inside the 66% safe zone of the 432px canvas and stay centered.
+    // sit inside the 66% safe zone of the 432-wide art canvas and stay
+    // centered.
     final art = File(
       'android/app/src/main/res/drawable-nodpi/ic_launcher_foreground_art.png',
     );
