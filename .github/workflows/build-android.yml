@@ -5,8 +5,6 @@ on:
   push:
     branches:
       - flClashBLocal
-    paths:
-      - .github/workflows/build-android.yml
 
 permissions:
   contents: read
