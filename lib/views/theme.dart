@@ -4,18 +4,12 @@ import 'package:fl_clash/icons/icons.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/providers/state.dart';
+import 'package:fl_clash/views/font_family.dart';
 import 'package:fl_clash/views/theme_preview.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_color_utilities/hct/hct.dart';
-
-class FontFamilyItem {
-  final FontFamily fontFamily;
-  final String label;
-
-  const FontFamilyItem({required this.fontFamily, required this.label});
-}
 
 class ThemeView extends StatelessWidget {
   const ThemeView({super.key});
@@ -43,6 +37,8 @@ class ThemeView extends StatelessWidget {
           const _TabAnimationItem(),
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
           const _SidebarBlurItem(),
+          const _FontFamilyItem(),
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
           const _TextScaleFactorItem(),
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
         ],
@@ -392,7 +388,7 @@ class _PrimaryColorGrid extends StatelessWidget {
             child: IconButton.filledTonal(
               tooltip: context.appLocalizations.add,
               onPressed: onAdd,
-              icon: const GlyphIcon(AppGlyphs.add, fill: 1),
+              icon: const GlyphIcon(AppGlyphs.addCircle, fill: 1),
             ),
           ),
       ],
@@ -424,6 +420,7 @@ class _PrimaryColorTile extends StatelessWidget {
       children: [
         EffectGestureDetector(
           onLongPress: onRequestRemove,
+          onSecondaryTap: onRequestRemove,
           child: ColorSchemeBox(
             isSelected: isSelected,
             primaryColor: color != null ? Color(color!) : null,
@@ -633,141 +630,79 @@ class _SidebarBlurItem extends ConsumerWidget {
   }
 }
 
-class _FontFamilyItem extends ConsumerStatefulWidget {
+class _FontFamilyItem extends ConsumerWidget {
   const _FontFamilyItem();
 
   @override
-  ConsumerState<_FontFamilyItem> createState() => _FontFamilyItemState();
-}
-
-class _FontFamilyItemState extends ConsumerState<_FontFamilyItem> {
-  late List<String> _families;
-
-  @override
-  void initState() {
-    super.initState();
-    _families = systemFontLoader.families;
-  }
-
-  Future<void> _selectFont(String value) async {
-    final family = value.isEmpty ? null : value;
-    if (!await systemFontLoader.load(family)) {
-      return;
-    }
-    ref
-        .read(themeSettingProvider.notifier)
-        .update((state) => state.copyWith(fontFamily: family));
-  }
-
-  Future<void> _showFontDialog(String? selectedFamily) async {
-    _families = systemFontLoader.refreshFamilies();
-    final value = await dialogs.showCommonDialog<String>(
-      child: _FontFamilyDialog(
-        families: _families,
-        selectedFamily: selectedFamily,
-      ),
-    );
-    if (value != null) {
-      await _selectFont(value);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final appLocalizations = context.appLocalizations;
-    final family = ref.watch(
+    final colorScheme = context.colorScheme;
+    final textTheme = context.textTheme;
+    final fontFamily = ref.watch(
       themeSettingProvider.select((state) => state.fontFamily),
     );
-    return SliverToBoxAdapter(
-      child: ListItem(
-        leading: const GlyphIcon(AppGlyphs.textSize),
-        horizontalTitleGap: 12,
-        title: Text(
-          appLocalizations.fontFamily,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            color: context.colorScheme.onSurfaceVariant,
+    final preview = Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+      child: Row(
+        spacing: 12,
+        children: [
+          Text(
+            'Aa',
+            style: textTheme.titleMedium?.copyWith(fontFamily: fontFamily),
           ),
-        ),
-        subtitle: Text(family ?? appLocalizations.systemFont),
-        trailing: const GlyphIcon(AppGlyphs.chevronForward),
-        onTap: () => _showFontDialog(family),
+          Expanded(
+            child: Text(
+              fontFamily ?? appLocalizations.defaultText,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: textTheme.bodyMedium?.copyWith(
+                fontFamily: fontFamily,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          GlyphIcon(
+            AppGlyphs.chevronForward,
+            size: 20,
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ],
       ),
     );
-  }
-}
-
-class _FontFamilyDialog extends StatefulWidget {
-  final List<String> families;
-  final String? selectedFamily;
-
-  const _FontFamilyDialog({
-    required this.families,
-    required this.selectedFamily,
-  });
-
-  @override
-  State<_FontFamilyDialog> createState() => _FontFamilyDialogState();
-}
-
-class _FontFamilyDialogState extends State<_FontFamilyDialog> {
-  String _keyword = '';
-
-  @override
-  Widget build(BuildContext context) {
-    final appLocalizations = context.appLocalizations;
-    final keyword = _keyword.trim().toLowerCase();
-    final families = widget.families
-        .where((family) => family.toLowerCase().contains(keyword))
-        .toList();
-    return CommonDialog(
-      title: appLocalizations.fontFamily,
-      overrideScroll: true,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-      child: SizedBox(
-        height: 420,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: TextField(
-                autofocus: true,
-                decoration: InputDecoration(
-                  prefixIcon: const GlyphIcon(AppGlyphs.search),
-                  hintText: appLocalizations.search,
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    _keyword = value;
-                  });
-                },
-              ),
+    Widget card(VoidCallback onTap) => Material(
+      color: colorScheme.surfaceContainerLow,
+      shape: AppShape.lg,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(customBorder: AppShape.lg, onTap: onTap, child: preview),
+    );
+    return SliverToBoxAdapter(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InfoHeader(
+            info: Info(
+              label: appLocalizations.fontFamily,
+              glyph: AppGlyphs.font,
             ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: RadioGroup<String>(
-                groupValue: widget.selectedFamily ?? '',
-                onChanged: (value) {
-                  if (value != null) {
-                    Navigator.of(context).pop(value);
-                  }
-                },
-                child: ListView(
-                  children: [
-                    ListItem<String>.radio(
-                      title: Text(appLocalizations.systemFont),
-                      value: '',
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: context.isMobileView
+                ? OpenContainer<void>(
+                    tappable: false,
+                    closedShape: AppShape.lg,
+                    closedColor: colorScheme.surfaceContainerLow,
+                    closedBuilder: (_, open) => card(open),
+                    openBuilder: (_, _) => const FontFamilyView(),
+                  )
+                : card(
+                    () => showSheet<void>(
+                      context: context,
+                      builder: (_) => const FontFamilyView(),
                     ),
-                    for (final family in families)
-                      ListItem<String>.radio(
-                        title: Text(family),
-                        value: family,
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+                  ),
+          ),
+        ],
       ),
     );
   }
@@ -800,9 +735,9 @@ class _TextScaleFactorItemState extends ConsumerState<_TextScaleFactorItem> {
     final textScale = ref.watch(
       themeSettingProvider.select((state) => state.textScale),
     );
-    final systemScale = defaultTextScaleFactor
-        .clamp(minTextScale, maxTextScale)
-        .toDouble();
+    final systemScale = systemTextScaleOf(
+      context,
+    ).clamp(minTextScale, maxTextScale).toDouble();
     final scale = _draft ?? (textScale.enable ? textScale.scale : systemScale);
     final percent = '${(scale * 100).round()}%';
     final divisions =
